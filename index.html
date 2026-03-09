@@ -346,7 +346,7 @@
 // ════════════════════════════════════════════════════════════════
 //  CONFIG — paste your deployed Apps Script Web App URL here
 // ════════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzeDBJ7054BcJVhbAgmrEHUjgzgNqCmA9QJpPRmVHgEQyNCw8qfegaQKnkMlNJQDaFg/exec";   // ← paste here
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvtte1qX5zIJ33x8MbD7zfA8k48CG1ft1MPiSYuhmFrO0wlBOmcywZ5gyrpe51RMeM/exec";   // ← paste here
 const LATE_CUTOFF_MIN = 10 * 60 + 5; // strictly > 10:05 = Late
 
 // ════════════════════════════════════════════════════════════════
@@ -651,26 +651,47 @@ function renderTable(){
 // ════════════════════════════════════════════════════════════════
 //  LOAD DATA FROM APPS SCRIPT
 // ════════════════════════════════════════════════════════════════
-async function loadFromSheet(){
-  if(!APPS_SCRIPT_URL) return false;
-  try{
-    const res  = await fetch(APPS_SCRIPT_URL);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    if(json.error) throw new Error(json.error);
-    if(json.employees && json.employees.length)
-      masterEmployees = json.employees.map(normName);
-    if(json.statuses)
-      statusData = json.statuses.map(s=>({...s, name:normName(s.name)}));
-    if(json.records && json.records.length){
-      data = json.records.map(r=>({...r,name:normName(r.name),remark:calcRemark(r.time)}));
-      latestDateStr = getLatestDateStr();
-      return true;
-    }
-  } catch(err){
-    console.warn('Sheet fetch failed:', err);
-  }
-  return false;
+// ════════════════════════════════════════════════════════════════
+//  LOAD DATA FROM APPS SCRIPT  (JSONP to bypass CORS)
+// ════════════════════════════════════════════════════════════════
+function loadFromSheet(){
+  return new Promise((resolve) => {
+    if(!APPS_SCRIPT_URL){ resolve(false); return; }
+
+    // remove any previous script tag
+    const old = document.getElementById('__gs_script');
+    if(old) old.remove();
+
+    // unique callback name
+    const cbName = '__gsCallback_' + Date.now();
+
+    // Apps Script calls this function with the data
+    window[cbName] = function(json){
+      try{
+        if(json.employees && json.employees.length)
+          masterEmployees = json.employees.map(normName);
+        if(json.statuses)
+          statusData = json.statuses.map(s=>({...s, name:normName(s.name)}));
+        if(json.records && json.records.length){
+          data = json.records.map(r=>({...r, name:normName(r.name), remark:calcRemark(r.time)}));
+          latestDateStr = getLatestDateStr();
+          resolve(true); return;
+        }
+      } catch(e){ console.warn('Parse error:', e); }
+      resolve(false);
+      delete window[cbName];
+    };
+
+    // inject script tag — Apps Script will wrap response in callback()
+    const s  = document.createElement('script');
+    s.id     = '__gs_script';
+    s.src    = APPS_SCRIPT_URL + '?callback=' + cbName + '&_t=' + Date.now();
+    s.onerror= ()=>{ console.warn('JSONP script load failed'); resolve(false); delete window[cbName]; };
+    document.head.appendChild(s);
+
+    // timeout fallback after 8 seconds
+    setTimeout(()=>{ if(window[cbName]){ resolve(false); delete window[cbName]; } }, 8000);
+  });
 }
 
 // ════════════════════════════════════════════════════════════════
