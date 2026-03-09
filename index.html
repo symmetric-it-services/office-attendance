@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Attendance Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:       #0a2540;
+    --blue:       #1a6bcc;
+    --blue-mid:   #2d9cdb;
+    --teal:       #00b8a9;
+    --green:      #00c48c;
+    --green-light:#e6faf5;
+    --white:      #ffffff;
+    --gray-50:    #f7fafc;
+    --gray-100:   #edf2f7;
+    --gray-200:   #e2e8f0;
+    --gray-400:   #94a3b8;
+    --gray-600:   #475569;
+    --late-bg:    #fff0f0;
+    --late-text:  #e53e3e;
+    --ontime-bg:  #f0fff8;
+    --ontime-text:#00c48c;
+    --shadow-sm:  0 1px 3px rgba(10,37,64,0.08);
+    --shadow-md:  0 4px 16px rgba(10,37,64,0.12);
+    --shadow-lg:  0 8px 32px rgba(10,37,64,0.16);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Sora',sans-serif;
+    background:linear-gradient(135deg,#e8f4fd 0%,#f0faf7 50%,#e8f4fd 100%);
+    min-height:100vh; color:var(--navy);
+  }
+
+  /* ── HEADER ── */
+  header {
+    background:linear-gradient(135deg,var(--navy) 0%,#0e3460 60%,#0a4d6e 100%);
+    position:sticky; top:0; z-index:100; box-shadow:var(--shadow-lg);
+  }
+  .header-inner {
+    max-width:1300px; margin:0 auto; padding:15px 32px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo-area { display:flex; align-items:center; gap:14px; }
+  .logo-icon {
+    width:44px; height:44px;
+    background:linear-gradient(135deg,var(--teal),var(--green));
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:22px; box-shadow:0 4px 12px rgba(0,196,140,0.4);
+  }
+  .logo-text h1 { font-size:1.2rem; font-weight:700; color:#fff; letter-spacing:-.3px; }
+  .logo-text p  { font-size:.68rem; color:rgba(255,255,255,.5); letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; }
+  .header-stats { display:flex; gap:24px; }
+  .hstat { text-align:center; }
+  .hstat-num   { font-size:1.4rem; font-weight:700; color:var(--teal); font-family:'JetBrains Mono',monospace; line-height:1; }
+  .hstat-label { font-size:.63rem; color:rgba(255,255,255,.45); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+
+  /* ── MAIN ── */
+  main { max-width:1300px; margin:0 auto; padding:26px 24px 60px; }
+
+  /* sample banner */
+  .sample-banner {
+    background:linear-gradient(135deg,rgba(0,184,169,.08),rgba(26,107,204,.08));
+    border:1.5px solid rgba(0,184,169,.25);
+    border-radius:12px; padding:11px 18px; margin-bottom:22px;
+    display:flex; align-items:center; gap:12px; font-size:.79rem; color:var(--navy);
+  }
+  .sample-banner .bi { font-size:1.1rem; }
+  .sample-banner strong { color:var(--blue); }
+  .sample-banner code {
+    background:rgba(26,107,204,.1); border-radius:4px;
+    padding:1px 5px; font-size:.76rem; color:var(--blue);
+  }
+
+  .section-title {
+    font-size:.68rem; font-weight:600; letter-spacing:2px;
+    text-transform:uppercase; color:var(--blue-mid);
+    margin-bottom:14px; display:flex; align-items:center; gap:8px;
+  }
+  .section-title::after {
+    content:''; flex:1; height:1px;
+    background:linear-gradient(to right,var(--blue-mid),transparent); opacity:.3;
+  }
+
+  /* ── SUMMARY GRID ── */
+  .summary-grid {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr));
+    gap:12px; margin-bottom:30px;
+  }
+  .absent-divider {
+    grid-column:1/-1; display:flex; align-items:center; gap:10px;
+    margin:10px 0 4px; font-size:.67rem; font-weight:600;
+    letter-spacing:1.5px; text-transform:uppercase; color:var(--gray-400);
+  }
+  .absent-divider::before,.absent-divider::after {
+    content:''; flex:1; height:1px; background:var(--gray-200);
+  }
+
+  .emp-card {
+    background:var(--white); border-radius:16px; padding:17px 15px;
+    box-shadow:var(--shadow-sm); border:1.5px solid var(--gray-100);
+    cursor:pointer; transition:all .22s ease;
+    position:relative; overflow:hidden;
+    animation:fadeUp .35s ease both;
+  }
+  .emp-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(to right,var(--teal),var(--green));
+    opacity:0; transition:opacity .22s;
+  }
+  .emp-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
+  .emp-card:hover::before { opacity:1; }
+  .emp-card.active { border-color:var(--teal); box-shadow:0 0 0 3px rgba(0,184,169,.15),var(--shadow-md); }
+  .emp-card.active::before { opacity:1; }
+  .emp-card.has-late { border-color:#fca5a5; }
+  .emp-card.has-late::before { background:linear-gradient(to right,#f87171,#ef4444); opacity:1; }
+  .emp-card.absent  { background:var(--gray-50); border-color:var(--gray-200); opacity:.8; cursor:default; }
+  .emp-card.absent::before { background:linear-gradient(to right,#94a3b8,#cbd5e1); opacity:1; }
+
+  .emp-avatar {
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.84rem; font-weight:700; color:#fff; margin-bottom:10px;
+    background:linear-gradient(135deg,var(--blue),var(--teal));
+  }
+  .emp-card.has-late .emp-avatar { background:linear-gradient(135deg,#f87171,#ef4444); }
+  .emp-card.absent   .emp-avatar { background:linear-gradient(135deg,#94a3b8,#cbd5e1); }
+  .emp-name   { font-size:.87rem; font-weight:600; color:var(--navy); margin-bottom:6px; }
+  .emp-badge  {
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:.71rem; font-weight:500; padding:3px 10px; border-radius:20px;
+  }
+  .emp-badge.ontime { background:var(--ontime-bg); color:var(--ontime-text); }
+  .emp-badge.late   { background:var(--late-bg);   color:var(--late-text);   }
+  .emp-badge.absent { background:var(--gray-100);  color:var(--gray-400);    }
+  .emp-sub { font-size:.67rem; color:var(--gray-400); margin-top:7px; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background:var(--white); border-radius:16px; padding:14px 20px;
+    display:flex; flex-wrap:wrap; gap:9px; align-items:center;
+    margin-bottom:20px; box-shadow:var(--shadow-sm); border:1px solid var(--gray-100);
+  }
+  .filter-label { font-size:.7rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:1px; }
+  .filter-btn {
+    padding:6px 14px; border-radius:30px; border:1.5px solid var(--gray-200);
+    background:var(--gray-50); color:var(--gray-600);
+    font-family:'Sora',sans-serif; font-size:.77rem; font-weight:500;
+    cursor:pointer; transition:all .18s;
+  }
+  .filter-btn:hover { border-color:var(--teal); color:var(--teal); background:var(--green-light); }
+  .filter-btn.active {
+    background:linear-gradient(135deg,var(--blue),var(--teal));
+    color:#fff; border-color:transparent; box-shadow:0 3px 10px rgba(26,107,204,.3);
+  }
+  .sep { width:1px; height:20px; background:var(--gray-200); margin:0 2px; }
+  .date-wrap { position:relative; display:flex; align-items:center; }
+  .date-wrap select {
+    padding:6px 28px 6px 12px; border-radius:30px;
+    border:1.5px solid var(--gray-200); background:var(--gray-50); color:var(--gray-600);
+    font-family:'Sora',sans-serif; font-size:.77rem; font-weight:500;
+    cursor:pointer; outline:none; transition:all .18s; appearance:none;
+  }
+  .date-wrap select:focus,.date-wrap select.has-val
+    { border-color:var(--teal); color:var(--navy); background:var(--white); }
+  .date-wrap::after { content:'▾'; position:absolute; right:10px; color:var(--gray-400); pointer-events:none; font-size:.73rem; }
+  .search-wrap { margin-left:auto; position:relative; }
+  .search-input {
+    padding:7px 14px 7px 33px; border:1.5px solid var(--gray-200); border-radius:30px;
+    font-family:'Sora',sans-serif; font-size:.79rem; color:var(--navy);
+    width:195px; outline:none; transition:all .18s; background:var(--gray-50);
+  }
+  .search-input:focus { border-color:var(--teal); background:#fff; box-shadow:0 0 0 3px rgba(0,184,169,.12); }
+  .search-icon { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--gray-400); font-size:.83rem; pointer-events:none; }
+
+  /* ── TABLE ── */
+  .table-card { background:#fff; border-radius:20px; box-shadow:var(--shadow-md); overflow:hidden; border:1px solid var(--gray-100); }
+  .table-header {
+    background:linear-gradient(135deg,var(--navy),#0e3460);
+    padding:15px 24px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .table-header h2 { font-size:.93rem; font-weight:600; color:#fff; display:flex; align-items:center; gap:10px; }
+  .table-header h2 span { background:rgba(255,255,255,.12); border-radius:20px; padding:2px 10px; font-size:.7rem; color:rgba(255,255,255,.65); }
+  .showing-lbl { font-size:.7rem; color:rgba(255,255,255,.4); }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  thead tr { background:var(--gray-50); border-bottom:2px solid var(--gray-100); }
+  th { padding:11px 18px; text-align:left; font-size:.69rem; font-weight:600; text-transform:uppercase; letter-spacing:1.2px; color:var(--gray-400); cursor:pointer; user-select:none; white-space:nowrap; transition:color .15s; }
+  th:hover { color:var(--blue); }
+  tbody tr { border-bottom:1px solid var(--gray-100); transition:background .15s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:var(--gray-50); }
+  tbody tr.late-row { background:#fff9f9; }
+  tbody tr.late-row:hover { background:#fff0f0; }
+  td { padding:12px 18px; font-size:.83rem; color:var(--navy); }
+  .td-date { font-family:'JetBrains Mono',monospace; font-size:.77rem; color:var(--gray-600); }
+  .td-time { font-family:'JetBrains Mono',monospace; font-weight:500; }
+  .td-time.late   { color:var(--late-text); }
+  .td-time.ontime { color:var(--ontime-text); }
+  .badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:30px; font-size:.72rem; font-weight:600; }
+  .badge.late   { background:var(--late-bg);   color:var(--late-text);   }
+  .badge.ontime { background:var(--ontime-bg); color:var(--ontime-text); }
+  .badge-src { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.67rem; background:rgba(26,107,204,.08); color:var(--blue); font-weight:500; }
+  .name-cell { display:flex; align-items:center; gap:9px; }
+  .mini-av { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.61rem; font-weight:700; color:#fff; flex-shrink:0; background:linear-gradient(135deg,var(--blue),var(--teal)); }
+  .empty-state { text-align:center; padding:54px 24px; color:var(--gray-400); }
+  .empty-state .icon { font-size:2.6rem; margin-bottom:12px; }
+  .empty-state p { font-size:.86rem; }
+
+  .footer-note { text-align:center; margin-top:26px; }
+  .cutoff-pill {
+    display:inline-flex; align-items:center; gap:8px;
+    background:linear-gradient(135deg,rgba(229,62,62,0.1),rgba(229,62,62,0.06));
+    border:1.5px solid rgba(229,62,62,0.3);
+    border-radius:30px; padding:8px 20px;
+    font-size:.82rem; font-weight:600; color:#c53030;
+    letter-spacing:.2px;
+  }
+  .cutoff-pill .dot {
+    width:8px; height:8px; border-radius:50%;
+    background:#e53e3e;
+    box-shadow:0 0 6px rgba(229,62,62,0.6);
+    flex-shrink:0;
+  }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+  @media(max-width:640px){
+    .header-stats{display:none}
+    .header-inner{padding:12px 16px}
+    main{padding:16px 12px 48px}
+    .summary-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}
+    .search-input{width:135px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-area">
+      <div class="logo-icon">📋</div>
+      <div class="logo-text">
+        <h1>Attendance Tracker</h1>
+        <p>Employee Punch-in Monitor</p>
+      </div>
+    </div>
+    <div class="header-stats" id="headerStats"></div>
+  </div>
+</header>
+
+<main>
+
+  <div class="sample-banner">
+    <span class="bi">💡</span>
+    <div>
+      <strong>Sample Data Preview</strong> — Showing how the dashboard looks with real data (3 dates, 9 employees, 2 absent today).
+      Set <code>APPS_SCRIPT_URL</code> in the script to connect your Google Sheet.
+    </div>
+  </div>
+
+  <div class="section-title" id="summaryTitle">Employee Summary</div>
+  <div class="summary-grid" id="summaryGrid"></div>
+
+  <div class="filter-bar">
+    <span class="filter-label">🔽 Filter</span>
+    <button class="filter-btn active" data-filter="all"    onclick="setFilter('all',this)">All Records</button>
+    <button class="filter-btn"        data-filter="late"   onclick="setFilter('late',this)">🔴 Late Only</button>
+    <button class="filter-btn"        data-filter="ontime" onclick="setFilter('ontime',this)">✅ On Time</button>
+    <div class="sep"></div>
+    <div class="date-wrap">
+      <select id="dateSelect" onchange="onDateChange(this)">
+        <option value="">📅 All Dates</option>
+      </select>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search employee…" oninput="renderTable()">
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h2>📅 Punch-In Log <span id="recordCount">0</span></h2>
+      <span class="showing-lbl" id="showingLbl"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('date')">Date ⇅</th>
+            <th onclick="sortBy('time')">Punch-In ⇅</th>
+            <th onclick="sortBy('name')">Employee ⇅</th>
+            <th onclick="sortBy('remark')">Status ⇅</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <div class="icon">🔍</div>
+        <p>No records match your filter.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <span class="cutoff-pill">
+      <span class="dot"></span>
+      Late mark cutoff: strictly after 10:05 AM
+    </span>
+  </div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  CONFIG  — paste your deployed Apps Script Web App URL here
+// ════════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEf-iNxvHKTwlaXmNZA9Yud4_1FZHcf6nSUgf_D2fqC0A1RRh3nZ4SBvY88Z1Vtauv/exec";
+const LATE_CUTOFF_MIN = 10 * 60 + 5; // strictly > 605 min = after 10:05
+
+// ════════════════════════════════════════════════════════════════
+//  MASTER EMPLOYEE LIST  (mirrors "Employee Master" sheet)
+// ════════════════════════════════════════════════════════════════
+let masterEmployees = [
+  "Vihang","Sumit","Vishal","Kaveri",
+  "Sanjay","Prajakta","Pratiksha","Sunil","Devendra"
+];
+
+// ════════════════════════════════════════════════════════════════
+//  SAMPLE DATA  (mirrors "Attendance" sheet)
+//  Rich dataset: 3 dates, varied times, 2 absent on latest date
+// ════════════════════════════════════════════════════════════════
+const rawData = [
+  // ── 02 Mar 2026 ──────────────────────────────────────────────
+  { date:"02/03/2026", time:"9:40:00",  name:"Vihang",    source:"Machine" },
+  { date:"02/03/2026", time:"9:40:00",  name:"Sumit",     source:"Machine" },
+  { date:"02/03/2026", time:"9:43:00",  name:"Vishal",    source:"Machine" },
+  { date:"02/03/2026", time:"9:56:00",  name:"Kaveri",    source:"Machine" },
+  { date:"02/03/2026", time:"10:00:00", name:"Sanjay",    source:"Machine" },
+  { date:"02/03/2026", time:"10:01:00", name:"Prajakta",  source:"Machine" },
+  { date:"02/03/2026", time:"10:01:00", name:"Pratiksha", source:"Machine" },
+  { date:"02/03/2026", time:"10:01:00", name:"Sunil",     source:"Machine" },
+  { date:"02/03/2026", time:"11:32:00", name:"Devendra",  source:"Machine" }, // Late ⚠
+  // ── 04 Mar 2026 ──────────────────────────────────────────────
+  { date:"04/03/2026", time:"9:17:00",  name:"Sumit",     source:"Machine" },
+  { date:"04/03/2026", time:"9:35:00",  name:"Vihang",    source:"Machine" },
+  { date:"04/03/2026", time:"9:38:00",  name:"Vishal",    source:"Machine" },
+  { date:"04/03/2026", time:"9:42:00",  name:"Sunil",     source:"Machine" },
+  { date:"04/03/2026", time:"9:56:00",  name:"Prajakta",  source:"Machine" },
+  { date:"04/03/2026", time:"9:57:00",  name:"Pratiksha", source:"Machine" },
+  { date:"04/03/2026", time:"10:00:00", name:"Kaveri",    source:"Machine" },
+  { date:"04/03/2026", time:"10:01:00", name:"Devendra",  source:"Machine" },
+  { date:"04/03/2026", time:"10:07:00", name:"Sanjay",    source:"Manual"  }, // Late ⚠
+  // ── 05 Mar 2026  ← LATEST DATE (shown in Summary cards) ─────
+  { date:"05/03/2026", time:"9:22:00",  name:"Sumit",     source:"Machine" },
+  { date:"05/03/2026", time:"9:38:00",  name:"Vihang",    source:"Machine" },
+  { date:"05/03/2026", time:"9:41:00",  name:"Vishal",    source:"Machine" },
+  { date:"05/03/2026", time:"9:44:00",  name:"Sunil",     source:"Machine" },
+  { date:"05/03/2026", time:"10:01:00", name:"Prajakta",  source:"Machine" },
+  { date:"05/03/2026", time:"10:06:00", name:"Pratiksha", source:"Machine" }, // Late ⚠ (after 10:05)
+  { date:"05/03/2026", time:"10:10:00", name:"Kaveri",    source:"Machine" }, // Late ⚠
+  // Sanjay & Devendra have NO record on 05 Mar → shown as Absent
+];
+
+// ════════════════════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════════════════════
+function normName(n){
+  return n.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+function calcRemark(time){
+  const [h,m] = time.split(':').map(Number);
+  return (h*60+m) > LATE_CUTOFF_MIN ? 'Late' : 'On time';
+}
+function parseDateStr(d){
+  const [dd,mm,yyyy] = d.split('/');
+  return new Date(`${yyyy}-${mm}-${dd}`);
+}
+function timeToMin(t){
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
+}
+function ini(name){
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+
+const AVATAR_COLORS = [
+  'linear-gradient(135deg,#1a6bcc,#00b8a9)',
+  'linear-gradient(135deg,#0e3460,#2d9cdb)',
+  'linear-gradient(135deg,#00b8a9,#00c48c)',
+  'linear-gradient(135deg,#2d9cdb,#00c48c)',
+  'linear-gradient(135deg,#1a6bcc,#00c48c)',
+];
+function avColor(i){ return AVATAR_COLORS[i % AVATAR_COLORS.length]; }
+
+// ════════════════════════════════════════════════════════════════
+//  BUILD LIVE DATASET
+// ════════════════════════════════════════════════════════════════
+let data = rawData.map(r => ({
+  ...r,
+  name:   normName(r.name),
+  remark: calcRemark(r.time)
+}));
+
+function getLatestDateStr(){
+  return data.reduce((max,r) =>
+    parseDateStr(r.date) > parseDateStr(max) ? r.date : max,
+  data[0].date);
+}
+let latestDateStr = getLatestDateStr();
+
+// ════════════════════════════════════════════════════════════════
+//  SUMMARY (latest date only)
+// ════════════════════════════════════════════════════════════════
+function buildSummary(){
+  const map = {};
+  data.filter(r => r.date === latestDateStr).forEach(r => {
+    if(!map[r.name]) map[r.name] = { late:0, firstPunch:'—' };
+    if(r.remark === 'Late') map[r.name].late++;
+    if(map[r.name].firstPunch === '—' || timeToMin(r.time) < timeToMin(map[r.name].firstPunch))
+      map[r.name].firstPunch = r.time.slice(0,5);
+  });
+  return map;
+}
+
+function renderSummary(activeEmp){
+  const summary      = buildSummary();
+  const grid         = document.getElementById('summaryGrid');
+  grid.innerHTML     = '';
+
+  const presentNames = Object.keys(summary);
+  const absentNames  = masterEmployees
+    .map(normName)
+    .filter(n => !presentNames.some(p => p.toLowerCase() === n.toLowerCase()));
+
+  const totalPresent = presentNames.length;
+  const totalAbsent  = absentNames.length;
+  const totalLate    = Object.values(summary).filter(s => s.late > 0).length;
+  const totalOnTime  = totalPresent - totalLate;
+
+  const [dd,mm,yyyy] = latestDateStr.split('/');
+  const dateLabel = new Date(`${yyyy}-${mm}-${dd}`)
+    .toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  // header stats
+  document.getElementById('headerStats').innerHTML = `
+    <div class="hstat"><div class="hstat-num">${totalPresent}</div><div class="hstat-label">Present</div></div>
+    <div class="hstat"><div class="hstat-num" style="color:#94a3b8">${totalAbsent}</div><div class="hstat-label">Absent</div></div>
+    <div class="hstat"><div class="hstat-num" style="color:#f87171">${totalLate}</div><div class="hstat-label">Late</div></div>
+    <div class="hstat"><div class="hstat-num" style="color:var(--green)">${totalOnTime}</div><div class="hstat-label">On Time</div></div>
+    <div class="hstat"><div class="hstat-num" style="font-size:.8rem;color:var(--teal)">${dateLabel}</div><div class="hstat-label">Last Updated</div></div>
+  `;
+  document.getElementById('summaryTitle').textContent = `Employee Summary — ${dateLabel}`;
+
+  // present cards
+  presentNames.forEach((name, i) => {
+    const stat     = summary[name];
+    const hasLate  = stat.late > 0;
+    const isActive = activeEmp === name;
+    const card     = document.createElement('div');
+    card.className = `emp-card ${hasLate?'has-late':''} ${isActive?'active':''}`;
+    card.style.animationDelay = `${i*.04}s`;
+    card.innerHTML = `
+      <div class="emp-avatar" style="${hasLate ? '' : `background:${avColor(i)}`}">${ini(name)}</div>
+      <div class="emp-name">${name}</div>
+      <span class="emp-badge ${hasLate?'late':'ontime'}">${hasLate ? '⚠ Late' : '✓ On Time'}</span>
+      <div class="emp-sub">🕐 ${stat.firstPunch}</div>
+    `;
+    card.onclick = () => {
+      activeEmployee = (activeEmployee === name) ? null : name;
+      currentFilter  = 'all';
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-filter="all"]').classList.add('active');
+      document.getElementById('dateSelect').value = '';
+      renderSummary(activeEmployee);
+      renderTable();
+    };
+    grid.appendChild(card);
+  });
+
+  // absent section
+  if(absentNames.length){
+    const div = document.createElement('div');
+    div.className   = 'absent-divider';
+    div.textContent = `Absent Today (${absentNames.length})`;
+    grid.appendChild(div);
+
+    absentNames.forEach((name, i) => {
+      const card = document.createElement('div');
+      card.className = 'emp-card absent';
+      card.style.animationDelay = `${(presentNames.length + i) * .04}s`;
+      card.innerHTML = `
+        <div class="emp-avatar">${ini(name)}</div>
+        <div class="emp-name">${name}</div>
+        <span class="emp-badge absent">✕ Absent</span>
+        <div class="emp-sub">No punch-in recorded</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════
+let currentFilter  = 'all';
+let activeEmployee = null;
+let sortKey        = 'date';
+let sortAsc        = true;
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const sel = document.getElementById('dateSelect');
+  sel.value = ''; sel.classList.remove('has-val');
+  // reset employee card selection too
+  if(f === 'all'){
+    activeEmployee = null;
+    renderSummary(null);
+  }
+  renderTable();
+}
+
+function onDateChange(sel){
+  currentFilter = sel.value || 'all';
+  activeEmployee = null;
+  renderSummary(null);
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if(!sel.value) document.querySelector('[data-filter="all"]').classList.add('active');
+  sel.classList.toggle('has-val', !!sel.value);
+  renderTable();
+}
+
+function sortBy(key){
+  if(sortKey === key) sortAsc = !sortAsc;
+  else { sortKey = key; sortAsc = true; }
+  renderTable();
+}
+
+function populateDateSelect(){
+  const dates = [...new Set(data.map(r=>r.date))]
+    .sort((a,b) => parseDateStr(a) - parseDateStr(b));
+  const sel = document.getElementById('dateSelect');
+  sel.innerHTML = '<option value="">📅 All Dates</option>';
+  dates.forEach(d => {
+    const [dd,mm,yyyy] = d.split('/');
+    const lbl = new Date(`${yyyy}-${mm}-${dd}`)
+      .toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = lbl;
+    sel.appendChild(opt);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  RENDER TABLE
+// ════════════════════════════════════════════════════════════════
+function renderTable(){
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  let filtered = [...data];
+
+  if(activeEmployee)               filtered = filtered.filter(r => r.name === activeEmployee);
+  if(currentFilter === 'late')     filtered = filtered.filter(r => r.remark === 'Late');
+  else if(currentFilter === 'ontime') filtered = filtered.filter(r => r.remark === 'On time');
+  else if(currentFilter.includes('/')) filtered = filtered.filter(r => r.date === currentFilter);
+  if(search) filtered = filtered.filter(r => r.name.toLowerCase().includes(search));
+
+  filtered.sort((a,b) => {
+    let va, vb;
+    if(sortKey === 'time'){ va = timeToMin(a.time); vb = timeToMin(b.time); }
+    else { va = (a[sortKey]||'').toLowerCase(); vb = (b[sortKey]||'').toLowerCase(); }
+    return sortAsc ? (va < vb ? -1 : va > vb ? 1 : 0)
+                   : (va > vb ? -1 : va < vb ? 1 : 0);
+  });
+
+  const body  = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('recordCount').textContent = filtered.length;
+  document.getElementById('showingLbl').textContent  = `Showing ${filtered.length} of ${data.length} records`;
+
+  if(!filtered.length){
+    body.innerHTML = ''; empty.style.display = 'block'; return;
+  }
+  empty.style.display = 'none';
+
+  body.innerHTML = filtered.map(r => {
+    const late = r.remark === 'Late';
+    return `
+      <tr class="${late ? 'late-row' : ''}">
+        <td class="td-date">${r.date}</td>
+        <td class="td-time ${late ? 'late' : 'ontime'}">${r.time.slice(0,5)}</td>
+        <td>
+          <div class="name-cell">
+            <div class="mini-av">${ini(r.name)}</div>
+            ${r.name}
+          </div>
+        </td>
+        <td><span class="badge ${late ? 'late' : 'ontime'}">${late ? '⚠ Late' : '✓ On Time'}</span></td>
+        <td><span class="badge-src">${r.source}</span></td>
+      </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  AUTO-REFRESH  — every 5 min (9:00–11:59 AM), every 30 min after
+// ════════════════════════════════════════════════════════════════
+let refreshTimer = null;
+
+function getRefreshInterval(){
+  const now  = new Date();
+  const h    = now.getHours();
+  const m    = now.getMinutes();
+  const mins = h * 60 + m;
+  // 9:00 (540) to 11:59 (719) → 5 min; otherwise 30 min
+  return (mins >= 540 && mins <= 719) ? 5 * 60 * 1000 : 30 * 60 * 1000;
+}
+
+function updateRefreshBadge(){
+  const now      = new Date();
+  const h        = now.getHours();
+  const m        = now.getMinutes();
+  const mins     = h * 60 + m;
+  const isPeak   = mins >= 540 && mins <= 719;
+  const interval = isPeak ? '5 min' : '30 min';
+  const badge    = document.getElementById('refreshBadge');
+  const lastEl   = document.getElementById('lastRefresh');
+  if(badge){
+    badge.textContent = `↻ Auto-refresh: ${interval}`;
+    badge.className   = `refresh-badge ${isPeak ? 'peak' : 'off-peak'}`;
+  }
+  if(lastEl){
+    lastEl.textContent = `Last refreshed: ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+  }
+}
+
+async function autoRefresh(){
+  if(!APPS_SCRIPT_URL){ updateRefreshBadge(); scheduleNext(); return; }
+  try{
+    const res  = await fetch(APPS_SCRIPT_URL + '&_t=' + Date.now()); // cache-bust
+    const json = await res.json();
+    if(json.employees) masterEmployees = json.employees.map(normName);
+    if(json.records && json.records.length){
+      data = json.records.map(r => ({
+        ...r, name: normName(r.name), remark: calcRemark(r.time)
+      }));
+      latestDateStr = getLatestDateStr();
+      populateDateSelect();
+      renderSummary(activeEmployee);
+      renderTable();
+    }
+  } catch(err){
+    console.warn('Auto-refresh failed:', err);
+  }
+  updateRefreshBadge();
+  scheduleNext();
+}
+
+function scheduleNext(){
+  if(refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(autoRefresh, getRefreshInterval());
+}
+
+function manualRefresh(){
+  const btn = document.getElementById('manualRefreshBtn');
+  if(btn){ btn.textContent = '↻ Refreshing…'; btn.disabled = true; }
+  if(refreshTimer) clearTimeout(refreshTimer);
+  autoRefresh().finally(()=>{
+    if(btn){ btn.textContent = '↻ Refresh Now'; btn.disabled = false; }
+  });
+}
+
+
+async function init(){
+  if(APPS_SCRIPT_URL){
+    try{
+      const res  = await fetch(APPS_SCRIPT_URL);
+      const json = await res.json();
+      if(json.employees) masterEmployees = json.employees.map(normName);
+      if(json.records && json.records.length){
+        data = json.records.map(r => ({
+          ...r, name: normName(r.name), remark: calcRemark(r.time)
+        }));
+        latestDateStr = getLatestDateStr();
+        const banner = document.querySelector('.sample-banner');
+        if(banner) banner.style.display = 'none';
+      }
+    } catch(err){
+      console.warn('Apps Script fetch failed — using sample data.', err);
+    }
+  }
+  populateDateSelect();
+  renderSummary(null);
+  renderTable();
+}
+
+init();
+
+// ════════════════════════════════════════════════════════════════
+//  SMART AUTO-REFRESH
+//  9:00 AM – 11:59 AM  → every 5 minutes
+//  All other times     → every 30 minutes
+// ════════════════════════════════════════════════════════════════
+let refreshTimer = null;
+
+function getRefreshInterval(){
+  const now     = new Date();
+  const totalMin = now.getHours() * 60 + now.getMinutes();
+  return (totalMin >= 540 && totalMin <= 719) ? 5 * 60 * 1000 : 30 * 60 * 1000;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  SILENT AUTO-REFRESH
+//  9:00 AM – 11:59 AM  → every 5 min (peak punch-in window)
+//  All other times     → every 30 min
+//  No UI shown — employees always see latest data automatically
+// ════════════════════════════════════════════════════════════════
+let refreshTimer = null;
+
+function getRefreshInterval(){
+  const now     = new Date();
+  const totalMin = now.getHours() * 60 + now.getMinutes();
+  // 9:00 (540) to 11:59 (719) = peak window
+  return (totalMin >= 540 && totalMin <= 719) ? 5 * 60 * 1000 : 30 * 60 * 1000;
+}
+
+async function silentRefresh(){
+  if(!APPS_SCRIPT_URL){ scheduleNext(); return; }
+  try{
+    const res  = await fetch(APPS_SCRIPT_URL + '?_t=' + Date.now()); // cache-bust
+    const json = await res.json();
+    if(json.employees) masterEmployees = json.employees.map(normName);
+    if(json.records && json.records.length){
+      data = json.records.map(r => ({
+        ...r, name: normName(r.name), remark: calcRemark(r.time)
+      }));
+      latestDateStr = getLatestDateStr();
+      populateDateSelect();
+      renderSummary(activeEmployee);
+      renderTable();
+    }
+  } catch(err){
+    // fail silently — employees see last known data
+    console.warn('Silent refresh failed, will retry next interval.', err);
+  }
+  scheduleNext();
+}
+
+function scheduleNext(){
+  if(refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(silentRefresh, getRefreshInterval());
+}
+
+scheduleNext();
+</script>
+</body>
+</html>
