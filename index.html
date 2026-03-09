@@ -119,6 +119,16 @@
   .emp-card.absent  { background:var(--gray-50); border-color:var(--gray-200); opacity:.8; cursor:default; }
   .emp-card.absent::before { background:linear-gradient(to right,#94a3b8,#cbd5e1); opacity:1; }
 
+  /* Leave — yellow */
+  .emp-card.on-leave { background:#fffdf0; border-color:#fcd34d; cursor:default; }
+  .emp-card.on-leave::before { background:linear-gradient(to right,#f59e0b,#fcd34d); opacity:1; }
+  .emp-card.on-leave .emp-avatar { background:linear-gradient(135deg,#f59e0b,#fcd34d); }
+
+  /* Field Visit — blue */
+  .emp-card.field-visit { background:#eff6ff; border-color:#93c5fd; cursor:default; }
+  .emp-card.field-visit::before { background:linear-gradient(to right,#3b82f6,#93c5fd); opacity:1; }
+  .emp-card.field-visit .emp-avatar { background:linear-gradient(135deg,#1d4ed8,#3b82f6); }
+
   .emp-avatar {
     width:38px; height:38px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
@@ -127,14 +137,29 @@
   }
   .emp-card.has-late .emp-avatar { background:linear-gradient(135deg,#f87171,#ef4444); }
   .emp-card.absent   .emp-avatar { background:linear-gradient(135deg,#94a3b8,#cbd5e1); }
+
+  /* ── Leave card — Amber/Yellow ── */
+  .emp-card.on-leave { background:#fffbeb; border-color:#fcd34d; }
+  .emp-card.on-leave::before { background:linear-gradient(to right,#f59e0b,#fcd34d); opacity:1; }
+  .emp-card.on-leave .emp-avatar { background:linear-gradient(135deg,#f59e0b,#fbbf24); }
+
+  /* ── Field Visit card — Sky Blue ── */
+  .emp-card.field-visit { background:#eff6ff; border-color:#93c5fd; }
+  .emp-card.field-visit::before { background:linear-gradient(to right,#3b82f6,#93c5fd); opacity:1; }
+  .emp-card.field-visit .emp-avatar { background:linear-gradient(135deg,#3b82f6,#60a5fa); }
+
   .emp-name   { font-size:.87rem; font-weight:600; color:var(--navy); margin-bottom:6px; }
   .emp-badge  {
     display:inline-flex; align-items:center; gap:4px;
     font-size:.71rem; font-weight:500; padding:3px 10px; border-radius:20px;
   }
-  .emp-badge.ontime { background:var(--ontime-bg); color:var(--ontime-text); }
-  .emp-badge.late   { background:var(--late-bg);   color:var(--late-text);   }
-  .emp-badge.absent { background:var(--gray-100);  color:var(--gray-400);    }
+  .emp-badge.ontime      { background:var(--ontime-bg); color:var(--ontime-text); }
+  .emp-badge.late        { background:var(--late-bg);   color:var(--late-text);   }
+  .emp-badge.absent      { background:var(--gray-100);  color:var(--gray-400);    }
+  .emp-badge.on-leave    { background:#fef3c7;          color:#b45309;            }
+  .emp-badge.field-visit { background:#dbeafe;          color:#1d4ed8;            }
+  .emp-badge.leave       { background:#fef3c7;          color:#b45309;            }
+  .emp-badge.field       { background:#dbeafe;          color:#1d4ed8;            }
   .emp-sub { font-size:.67rem; color:var(--gray-400); margin-top:7px; }
 
   /* ── FILTER BAR ── */
@@ -315,15 +340,17 @@
 
 </main>
 
+</main>
+
 <script>
 // ════════════════════════════════════════════════════════════════
-//  CONFIG  — paste your deployed Apps Script Web App URL here
+//  CONFIG — paste your deployed Apps Script Web App URL here
 // ════════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEf-iNxvHKTwlaXmNZA9Yud4_1FZHcf6nSUgf_D2fqC0A1RRh3nZ4SBvY88Z1Vtauv/exec";
-const LATE_CUTOFF_MIN = 10 * 60 + 5; // strictly > 605 min = after 10:05
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzeDBJ7054BcJVhbAgmrEHUjgzgNqCmA9QJpPRmVHgEQyNCw8qfegaQKnkMlNJQDaFg/exec";   // ← paste here
+const LATE_CUTOFF_MIN = 10 * 60 + 5; // strictly > 10:05 = Late
 
 // ════════════════════════════════════════════════════════════════
-//  MASTER EMPLOYEE LIST  (mirrors "Employee Master" sheet)
+//  MASTER EMPLOYEE LIST  (from "Employee Master" sheet)
 // ════════════════════════════════════════════════════════════════
 let masterEmployees = [
   "Vihang","Sumit","Vishal","Kaveri",
@@ -331,11 +358,18 @@ let masterEmployees = [
 ];
 
 // ════════════════════════════════════════════════════════════════
-//  SAMPLE DATA  (mirrors "Attendance" sheet)
-//  Rich dataset: 3 dates, varied times, 2 absent on latest date
+//  SAMPLE STATUS DATA  (from "Status" sheet)
+//  Columns: Date | Name | Status (Leave / Field Visit)
+// ════════════════════════════════════════════════════════════════
+let statusData = [
+  { date:"05/03/2026", name:"Sanjay",   status:"Leave"       },
+  { date:"05/03/2026", name:"Devendra", status:"Field Visit"  },
+];
+
+// ════════════════════════════════════════════════════════════════
+//  SAMPLE DATA  (from "Attendance" sheet)
 // ════════════════════════════════════════════════════════════════
 const rawData = [
-  // ── 02 Mar 2026 ──────────────────────────────────────────────
   { date:"02/03/2026", time:"9:40:00",  name:"Vihang",    source:"Machine" },
   { date:"02/03/2026", time:"9:40:00",  name:"Sumit",     source:"Machine" },
   { date:"02/03/2026", time:"9:43:00",  name:"Vishal",    source:"Machine" },
@@ -344,8 +378,7 @@ const rawData = [
   { date:"02/03/2026", time:"10:01:00", name:"Prajakta",  source:"Machine" },
   { date:"02/03/2026", time:"10:01:00", name:"Pratiksha", source:"Machine" },
   { date:"02/03/2026", time:"10:01:00", name:"Sunil",     source:"Machine" },
-  { date:"02/03/2026", time:"11:32:00", name:"Devendra",  source:"Machine" }, // Late ⚠
-  // ── 04 Mar 2026 ──────────────────────────────────────────────
+  { date:"02/03/2026", time:"11:32:00", name:"Devendra",  source:"Machine" },
   { date:"04/03/2026", time:"9:17:00",  name:"Sumit",     source:"Machine" },
   { date:"04/03/2026", time:"9:35:00",  name:"Vihang",    source:"Machine" },
   { date:"04/03/2026", time:"9:38:00",  name:"Vishal",    source:"Machine" },
@@ -354,24 +387,20 @@ const rawData = [
   { date:"04/03/2026", time:"9:57:00",  name:"Pratiksha", source:"Machine" },
   { date:"04/03/2026", time:"10:00:00", name:"Kaveri",    source:"Machine" },
   { date:"04/03/2026", time:"10:01:00", name:"Devendra",  source:"Machine" },
-  { date:"04/03/2026", time:"10:07:00", name:"Sanjay",    source:"Manual"  }, // Late ⚠
-  // ── 05 Mar 2026  ← LATEST DATE (shown in Summary cards) ─────
+  { date:"04/03/2026", time:"10:07:00", name:"Sanjay",    source:"Manual"  },
   { date:"05/03/2026", time:"9:22:00",  name:"Sumit",     source:"Machine" },
   { date:"05/03/2026", time:"9:38:00",  name:"Vihang",    source:"Machine" },
   { date:"05/03/2026", time:"9:41:00",  name:"Vishal",    source:"Machine" },
   { date:"05/03/2026", time:"9:44:00",  name:"Sunil",     source:"Machine" },
   { date:"05/03/2026", time:"10:01:00", name:"Prajakta",  source:"Machine" },
-  { date:"05/03/2026", time:"10:06:00", name:"Pratiksha", source:"Machine" }, // Late ⚠ (after 10:05)
-  { date:"05/03/2026", time:"10:10:00", name:"Kaveri",    source:"Machine" }, // Late ⚠
-  // Sanjay & Devendra have NO record on 05 Mar → shown as Absent
+  { date:"05/03/2026", time:"10:06:00", name:"Pratiksha", source:"Machine" },
+  { date:"05/03/2026", time:"10:10:00", name:"Kaveri",    source:"Machine" },
 ];
 
 // ════════════════════════════════════════════════════════════════
 //  HELPERS
 // ════════════════════════════════════════════════════════════════
-function normName(n){
-  return n.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-}
+function normName(n){ return n.trim().toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()); }
 function calcRemark(time){
   const [h,m] = time.split(':').map(Number);
   return (h*60+m) > LATE_CUTOFF_MIN ? 'Late' : 'On time';
@@ -380,13 +409,8 @@ function parseDateStr(d){
   const [dd,mm,yyyy] = d.split('/');
   return new Date(`${yyyy}-${mm}-${dd}`);
 }
-function timeToMin(t){
-  const [h,m] = t.split(':').map(Number);
-  return h*60+m;
-}
-function ini(name){
-  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-}
+function timeToMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function ini(name){ return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
 
 const AVATAR_COLORS = [
   'linear-gradient(135deg,#1a6bcc,#00b8a9)',
@@ -395,21 +419,31 @@ const AVATAR_COLORS = [
   'linear-gradient(135deg,#2d9cdb,#00c48c)',
   'linear-gradient(135deg,#1a6bcc,#00c48c)',
 ];
-function avColor(i){ return AVATAR_COLORS[i % AVATAR_COLORS.length]; }
+function avColor(i){ return AVATAR_COLORS[i%AVATAR_COLORS.length]; }
 
 // ════════════════════════════════════════════════════════════════
-//  BUILD LIVE DATASET
+//  STATUS DATA  (from "Status" sheet — Leave / Field Visit)
 // ════════════════════════════════════════════════════════════════
-let data = rawData.map(r => ({
-  ...r,
-  name:   normName(r.name),
-  remark: calcRemark(r.time)
-}));
+// Each entry: { name, date, status }  — date in DD/MM/YYYY format
+let statusData = [
+  // sample entries — replaced by live sheet data when connected
+  { name:"Sanjay",   date:"05/03/2026", status:"Leave"       },
+  { name:"Devendra", date:"05/03/2026", status:"Field Visit"  },
+];
+
+// helper: get status for an employee on the latest date
+function getStatusForToday(name){
+  const entry = statusData.find(s =>
+    s.name.toLowerCase() === name.toLowerCase() && s.date === latestDateStr
+  );
+  return entry ? entry.status : null;
+}
+
+
+let data = rawData.map(r=>({...r, name:normName(r.name), remark:calcRemark(r.time)}));
 
 function getLatestDateStr(){
-  return data.reduce((max,r) =>
-    parseDateStr(r.date) > parseDateStr(max) ? r.date : max,
-  data[0].date);
+  return data.reduce((max,r)=>parseDateStr(r.date)>parseDateStr(max)?r.date:max, data[0].date);
 }
 let latestDateStr = getLatestDateStr();
 
@@ -418,142 +452,164 @@ let latestDateStr = getLatestDateStr();
 // ════════════════════════════════════════════════════════════════
 function buildSummary(){
   const map = {};
-  data.filter(r => r.date === latestDateStr).forEach(r => {
-    if(!map[r.name]) map[r.name] = { late:0, firstPunch:'—' };
-    if(r.remark === 'Late') map[r.name].late++;
-    if(map[r.name].firstPunch === '—' || timeToMin(r.time) < timeToMin(map[r.name].firstPunch))
-      map[r.name].firstPunch = r.time.slice(0,5);
+  data.filter(r=>r.date===latestDateStr).forEach(r=>{
+    if(!map[r.name]) map[r.name]={late:0,firstPunch:'—'};
+    if(r.remark==='Late') map[r.name].late++;
+    if(map[r.name].firstPunch==='—'||timeToMin(r.time)<timeToMin(map[r.name].firstPunch))
+      map[r.name].firstPunch=r.time.slice(0,5);
   });
   return map;
 }
 
 function renderSummary(activeEmp){
-  const summary      = buildSummary();
-  const grid         = document.getElementById('summaryGrid');
-  grid.innerHTML     = '';
+  const summary     = buildSummary();
+  const grid        = document.getElementById('summaryGrid');
+  grid.innerHTML    = '';
+  const presentNames= Object.keys(summary);
 
-  const presentNames = Object.keys(summary);
-  const absentNames  = masterEmployees
-    .map(normName)
-    .filter(n => !presentNames.some(p => p.toLowerCase() === n.toLowerCase()));
+  // categorise non-present employees
+  const leaveNames      = [];
+  const fieldVisitNames = [];
+  const absentNames     = [];
 
-  const totalPresent = presentNames.length;
-  const totalAbsent  = absentNames.length;
-  const totalLate    = Object.values(summary).filter(s => s.late > 0).length;
-  const totalOnTime  = totalPresent - totalLate;
+  masterEmployees.map(normName).forEach(n => {
+    if(presentNames.some(p => p.toLowerCase()===n.toLowerCase())) return;
+    const st = getStatusForToday(n);
+    if(st==='Leave')            leaveNames.push(n);
+    else if(st==='Field Visit') fieldVisitNames.push(n);
+    else                        absentNames.push(n);
+  });
 
-  const [dd,mm,yyyy] = latestDateStr.split('/');
-  const dateLabel = new Date(`${yyyy}-${mm}-${dd}`)
+  const totalPresent    = presentNames.length;
+  const totalLate       = Object.values(summary).filter(s=>s.late>0).length;
+  const totalOnTime     = totalPresent - totalLate;
+  const totalLeave      = leaveNames.length;
+  const totalField      = fieldVisitNames.length;
+  const totalAbsent     = absentNames.length;
+
+  const [dd,mm,yyyy]= latestDateStr.split('/');
+  const dateLabel   = new Date(`${yyyy}-${mm}-${dd}`)
     .toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 
-  // header stats
-  document.getElementById('headerStats').innerHTML = `
+  document.getElementById('headerStats').innerHTML=`
     <div class="hstat"><div class="hstat-num">${totalPresent}</div><div class="hstat-label">Present</div></div>
     <div class="hstat"><div class="hstat-num" style="color:#94a3b8">${totalAbsent}</div><div class="hstat-label">Absent</div></div>
+    <div class="hstat"><div class="hstat-num" style="color:#f59e0b">${totalLeave}</div><div class="hstat-label">On Leave</div></div>
+    <div class="hstat"><div class="hstat-num" style="color:#3b82f6">${totalField}</div><div class="hstat-label">Field Visit</div></div>
     <div class="hstat"><div class="hstat-num" style="color:#f87171">${totalLate}</div><div class="hstat-label">Late</div></div>
-    <div class="hstat"><div class="hstat-num" style="color:var(--green)">${totalOnTime}</div><div class="hstat-label">On Time</div></div>
     <div class="hstat"><div class="hstat-num" style="font-size:.8rem;color:var(--teal)">${dateLabel}</div><div class="hstat-label">Last Updated</div></div>
   `;
-  document.getElementById('summaryTitle').textContent = `Employee Summary — ${dateLabel}`;
+  document.getElementById('summaryTitle').textContent=`Employee Summary — ${dateLabel}`;
 
-  // present cards
-  presentNames.forEach((name, i) => {
-    const stat     = summary[name];
-    const hasLate  = stat.late > 0;
-    const isActive = activeEmp === name;
-    const card     = document.createElement('div');
-    card.className = `emp-card ${hasLate?'has-late':''} ${isActive?'active':''}`;
-    card.style.animationDelay = `${i*.04}s`;
-    card.innerHTML = `
-      <div class="emp-avatar" style="${hasLate ? '' : `background:${avColor(i)}`}">${ini(name)}</div>
+  // ── Present cards ──
+  presentNames.forEach((name,i)=>{
+    const stat=summary[name], hasLate=stat.late>0, isActive=activeEmp===name;
+    const card=document.createElement('div');
+    card.className=`emp-card ${hasLate?'has-late':''} ${isActive?'active':''}`;
+    card.style.animationDelay=`${i*.04}s`;
+    card.innerHTML=`
+      <div class="emp-avatar" style="${hasLate?'':'background:'+avColor(i)}">${ini(name)}</div>
       <div class="emp-name">${name}</div>
-      <span class="emp-badge ${hasLate?'late':'ontime'}">${hasLate ? '⚠ Late' : '✓ On Time'}</span>
-      <div class="emp-sub">🕐 ${stat.firstPunch}</div>
-    `;
-    card.onclick = () => {
-      activeEmployee = (activeEmployee === name) ? null : name;
-      currentFilter  = 'all';
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      <span class="emp-badge ${hasLate?'late':'ontime'}">${hasLate?'⚠ Late':'✓ On Time'}</span>
+      <div class="emp-sub">🕐 ${stat.firstPunch}</div>`;
+    card.onclick=()=>{
+      activeEmployee=(activeEmployee===name)?null:name;
+      currentFilter='all';
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
       document.querySelector('[data-filter="all"]').classList.add('active');
-      document.getElementById('dateSelect').value = '';
+      document.getElementById('dateSelect').value='';
       renderSummary(activeEmployee);
       renderTable();
     };
     grid.appendChild(card);
   });
 
-  // absent section
-  if(absentNames.length){
-    const div = document.createElement('div');
-    div.className   = 'absent-divider';
-    div.textContent = `Absent Today (${absentNames.length})`;
-    grid.appendChild(div);
+  // ── On Leave cards ──
+  if(leaveNames.length){
+    appendDivider(grid, `🟡 On Leave (${leaveNames.length})`);
+    leaveNames.forEach((name,i)=>{
+      grid.appendChild(makeStatusCard(name,'on-leave','leave','🌴 On Leave', presentNames.length+i));
+    });
+  }
 
-    absentNames.forEach((name, i) => {
-      const card = document.createElement('div');
-      card.className = 'emp-card absent';
-      card.style.animationDelay = `${(presentNames.length + i) * .04}s`;
-      card.innerHTML = `
-        <div class="emp-avatar">${ini(name)}</div>
-        <div class="emp-name">${name}</div>
-        <span class="emp-badge absent">✕ Absent</span>
-        <div class="emp-sub">No punch-in recorded</div>
-      `;
-      grid.appendChild(card);
+  // ── Field Visit cards ──
+  if(fieldVisitNames.length){
+    appendDivider(grid, `🔵 Field Visit (${fieldVisitNames.length})`);
+    fieldVisitNames.forEach((name,i)=>{
+      grid.appendChild(makeStatusCard(name,'field-visit','field','🚗 Field Visit', presentNames.length+leaveNames.length+i));
+    });
+  }
+
+  // ── Absent cards ──
+  if(absentNames.length){
+    appendDivider(grid, `Absent (${absentNames.length})`);
+    absentNames.forEach((name,i)=>{
+      grid.appendChild(makeStatusCard(name,'absent','absent','✕ Absent', presentNames.length+leaveNames.length+fieldVisitNames.length+i));
     });
   }
 }
 
-// ════════════════════════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════════════════════════
-let currentFilter  = 'all';
-let activeEmployee = null;
-let sortKey        = 'date';
-let sortAsc        = true;
+function appendDivider(grid, text){
+  const div=document.createElement('div');
+  div.className='absent-divider';
+  div.textContent=text;
+  grid.appendChild(div);
+}
 
-function setFilter(f, btn){
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+function makeStatusCard(name, cardClass, badgeClass, label, i){
+  const card=document.createElement('div');
+  card.className=`emp-card ${cardClass}`;
+  card.style.animationDelay=`${i*.04}s`;
+  const sub = cardClass==='on-leave' ? 'Approved leave'
+            : cardClass==='field-visit' ? 'Out on field visit'
+            : 'No punch-in recorded';
+  card.innerHTML=`
+    <div class="emp-avatar">${ini(name)}</div>
+    <div class="emp-name">${name}</div>
+    <span class="emp-badge ${badgeClass}">${label}</span>
+    <div class="emp-sub">${sub}</div>`;
+  return card;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  STATE & FILTERS
+// ════════════════════════════════════════════════════════════════
+let currentFilter='all', activeEmployee=null, sortKey='date', sortAsc=true;
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  const sel = document.getElementById('dateSelect');
-  sel.value = ''; sel.classList.remove('has-val');
-  // reset employee card selection too
-  if(f === 'all'){
-    activeEmployee = null;
-    renderSummary(null);
-  }
+  const sel=document.getElementById('dateSelect');
+  sel.value=''; sel.classList.remove('has-val');
+  if(f==='all'){ activeEmployee=null; renderSummary(null); }
   renderTable();
 }
 
 function onDateChange(sel){
-  currentFilter = sel.value || 'all';
-  activeEmployee = null;
+  currentFilter=sel.value||'all';
+  activeEmployee=null;
   renderSummary(null);
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   if(!sel.value) document.querySelector('[data-filter="all"]').classList.add('active');
-  sel.classList.toggle('has-val', !!sel.value);
+  sel.classList.toggle('has-val',!!sel.value);
   renderTable();
 }
 
 function sortBy(key){
-  if(sortKey === key) sortAsc = !sortAsc;
-  else { sortKey = key; sortAsc = true; }
+  if(sortKey===key) sortAsc=!sortAsc; else{sortKey=key;sortAsc=true;}
   renderTable();
 }
 
 function populateDateSelect(){
-  const dates = [...new Set(data.map(r=>r.date))]
-    .sort((a,b) => parseDateStr(a) - parseDateStr(b));
-  const sel = document.getElementById('dateSelect');
-  sel.innerHTML = '<option value="">📅 All Dates</option>';
-  dates.forEach(d => {
-    const [dd,mm,yyyy] = d.split('/');
-    const lbl = new Date(`${yyyy}-${mm}-${dd}`)
-      .toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-    const opt = document.createElement('option');
-    opt.value = d; opt.textContent = lbl;
-    sel.appendChild(opt);
+  const dates=[...new Set(data.map(r=>r.date))].sort((a,b)=>parseDateStr(a)-parseDateStr(b));
+  const sel=document.getElementById('dateSelect');
+  sel.innerHTML='<option value="">📅 All Dates</option>';
+  dates.forEach(d=>{
+    const [dd,mm,yyyy]=d.split('/');
+    const lbl=new Date(`${yyyy}-${mm}-${dd}`).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const opt=document.createElement('option');
+    opt.value=d; opt.textContent=lbl; sel.appendChild(opt);
   });
 }
 
@@ -561,201 +617,101 @@ function populateDateSelect(){
 //  RENDER TABLE
 // ════════════════════════════════════════════════════════════════
 function renderTable(){
-  const search = document.getElementById('searchInput').value.toLowerCase().trim();
-  let filtered = [...data];
-
-  if(activeEmployee)               filtered = filtered.filter(r => r.name === activeEmployee);
-  if(currentFilter === 'late')     filtered = filtered.filter(r => r.remark === 'Late');
-  else if(currentFilter === 'ontime') filtered = filtered.filter(r => r.remark === 'On time');
-  else if(currentFilter.includes('/')) filtered = filtered.filter(r => r.date === currentFilter);
-  if(search) filtered = filtered.filter(r => r.name.toLowerCase().includes(search));
-
-  filtered.sort((a,b) => {
-    let va, vb;
-    if(sortKey === 'time'){ va = timeToMin(a.time); vb = timeToMin(b.time); }
-    else { va = (a[sortKey]||'').toLowerCase(); vb = (b[sortKey]||'').toLowerCase(); }
-    return sortAsc ? (va < vb ? -1 : va > vb ? 1 : 0)
-                   : (va > vb ? -1 : va < vb ? 1 : 0);
+  const search=document.getElementById('searchInput').value.toLowerCase().trim();
+  let filtered=[...data];
+  if(activeEmployee)              filtered=filtered.filter(r=>r.name===activeEmployee);
+  if(currentFilter==='late')      filtered=filtered.filter(r=>r.remark==='Late');
+  else if(currentFilter==='ontime') filtered=filtered.filter(r=>r.remark==='On time');
+  else if(currentFilter.includes('/')) filtered=filtered.filter(r=>r.date===currentFilter);
+  if(search) filtered=filtered.filter(r=>r.name.toLowerCase().includes(search));
+  filtered.sort((a,b)=>{
+    let va,vb;
+    if(sortKey==='time'){va=timeToMin(a.time);vb=timeToMin(b.time);}
+    else{va=(a[sortKey]||'').toLowerCase();vb=(b[sortKey]||'').toLowerCase();}
+    return sortAsc?(va<vb?-1:va>vb?1:0):(va>vb?-1:va<vb?1:0);
   });
-
-  const body  = document.getElementById('tableBody');
-  const empty = document.getElementById('emptyState');
-  document.getElementById('recordCount').textContent = filtered.length;
-  document.getElementById('showingLbl').textContent  = `Showing ${filtered.length} of ${data.length} records`;
-
-  if(!filtered.length){
-    body.innerHTML = ''; empty.style.display = 'block'; return;
-  }
-  empty.style.display = 'none';
-
-  body.innerHTML = filtered.map(r => {
-    const late = r.remark === 'Late';
-    return `
-      <tr class="${late ? 'late-row' : ''}">
-        <td class="td-date">${r.date}</td>
-        <td class="td-time ${late ? 'late' : 'ontime'}">${r.time.slice(0,5)}</td>
-        <td>
-          <div class="name-cell">
-            <div class="mini-av">${ini(r.name)}</div>
-            ${r.name}
-          </div>
-        </td>
-        <td><span class="badge ${late ? 'late' : 'ontime'}">${late ? '⚠ Late' : '✓ On Time'}</span></td>
-        <td><span class="badge-src">${r.source}</span></td>
-      </tr>`;
+  const body=document.getElementById('tableBody');
+  const empty=document.getElementById('emptyState');
+  document.getElementById('recordCount').textContent=filtered.length;
+  document.getElementById('showingLbl').textContent=`Showing ${filtered.length} of ${data.length} records`;
+  if(!filtered.length){body.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  body.innerHTML=filtered.map(r=>{
+    const late=r.remark==='Late';
+    return `<tr class="${late?'late-row':''}">
+      <td class="td-date">${r.date}</td>
+      <td class="td-time ${late?'late':'ontime'}">${r.time.slice(0,5)}</td>
+      <td><div class="name-cell"><div class="mini-av">${ini(r.name)}</div>${r.name}</div></td>
+      <td><span class="badge ${late?'late':'ontime'}">${late?'⚠ Late':'✓ On Time'}</span></td>
+      <td><span class="badge-src">${r.source}</span></td>
+    </tr>`;
   }).join('');
 }
 
 // ════════════════════════════════════════════════════════════════
-//  AUTO-REFRESH  — every 5 min (9:00–11:59 AM), every 30 min after
+//  LOAD DATA FROM APPS SCRIPT
 // ════════════════════════════════════════════════════════════════
-let refreshTimer = null;
-
-function getRefreshInterval(){
-  const now  = new Date();
-  const h    = now.getHours();
-  const m    = now.getMinutes();
-  const mins = h * 60 + m;
-  // 9:00 (540) to 11:59 (719) → 5 min; otherwise 30 min
-  return (mins >= 540 && mins <= 719) ? 5 * 60 * 1000 : 30 * 60 * 1000;
-}
-
-function updateRefreshBadge(){
-  const now      = new Date();
-  const h        = now.getHours();
-  const m        = now.getMinutes();
-  const mins     = h * 60 + m;
-  const isPeak   = mins >= 540 && mins <= 719;
-  const interval = isPeak ? '5 min' : '30 min';
-  const badge    = document.getElementById('refreshBadge');
-  const lastEl   = document.getElementById('lastRefresh');
-  if(badge){
-    badge.textContent = `↻ Auto-refresh: ${interval}`;
-    badge.className   = `refresh-badge ${isPeak ? 'peak' : 'off-peak'}`;
-  }
-  if(lastEl){
-    lastEl.textContent = `Last refreshed: ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
-  }
-}
-
-async function autoRefresh(){
-  if(!APPS_SCRIPT_URL){ updateRefreshBadge(); scheduleNext(); return; }
+async function loadFromSheet(){
+  if(!APPS_SCRIPT_URL) return false;
   try{
-    const res  = await fetch(APPS_SCRIPT_URL + '&_t=' + Date.now()); // cache-bust
+    const res  = await fetch(APPS_SCRIPT_URL);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
-    if(json.employees) masterEmployees = json.employees.map(normName);
+    if(json.error) throw new Error(json.error);
+    if(json.employees && json.employees.length)
+      masterEmployees = json.employees.map(normName);
+    if(json.statuses)
+      statusData = json.statuses.map(s=>({...s, name:normName(s.name)}));
     if(json.records && json.records.length){
-      data = json.records.map(r => ({
-        ...r, name: normName(r.name), remark: calcRemark(r.time)
-      }));
+      data = json.records.map(r=>({...r,name:normName(r.name),remark:calcRemark(r.time)}));
       latestDateStr = getLatestDateStr();
-      populateDateSelect();
-      renderSummary(activeEmployee);
-      renderTable();
+      return true;
     }
   } catch(err){
-    console.warn('Auto-refresh failed:', err);
+    console.warn('Sheet fetch failed:', err);
   }
-  updateRefreshBadge();
-  scheduleNext();
+  return false;
 }
 
-function scheduleNext(){
-  if(refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(autoRefresh, getRefreshInterval());
-}
-
-function manualRefresh(){
-  const btn = document.getElementById('manualRefreshBtn');
-  if(btn){ btn.textContent = '↻ Refreshing…'; btn.disabled = true; }
-  if(refreshTimer) clearTimeout(refreshTimer);
-  autoRefresh().finally(()=>{
-    if(btn){ btn.textContent = '↻ Refresh Now'; btn.disabled = false; }
-  });
-}
-
-
+// ════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════
 async function init(){
-  if(APPS_SCRIPT_URL){
-    try{
-      const res  = await fetch(APPS_SCRIPT_URL);
-      const json = await res.json();
-      if(json.employees) masterEmployees = json.employees.map(normName);
-      if(json.records && json.records.length){
-        data = json.records.map(r => ({
-          ...r, name: normName(r.name), remark: calcRemark(r.time)
-        }));
-        latestDateStr = getLatestDateStr();
-        const banner = document.querySelector('.sample-banner');
-        if(banner) banner.style.display = 'none';
-      }
-    } catch(err){
-      console.warn('Apps Script fetch failed — using sample data.', err);
-    }
+  const loaded = await loadFromSheet();
+  if(loaded){
+    const banner=document.querySelector('.sample-banner');
+    if(banner) banner.style.display='none';
   }
   populateDateSelect();
   renderSummary(null);
   renderTable();
 }
 
-init();
-
-// ════════════════════════════════════════════════════════════════
-//  SMART AUTO-REFRESH
-//  9:00 AM – 11:59 AM  → every 5 minutes
-//  All other times     → every 30 minutes
-// ════════════════════════════════════════════════════════════════
-let refreshTimer = null;
-
-function getRefreshInterval(){
-  const now     = new Date();
-  const totalMin = now.getHours() * 60 + now.getMinutes();
-  return (totalMin >= 540 && totalMin <= 719) ? 5 * 60 * 1000 : 30 * 60 * 1000;
-}
-
 // ════════════════════════════════════════════════════════════════
 //  SILENT AUTO-REFRESH
-//  9:00 AM – 11:59 AM  → every 5 min (peak punch-in window)
-//  All other times     → every 30 min
-//  No UI shown — employees always see latest data automatically
+//  9:00–11:59 AM → every 5 min | otherwise → every 30 min
 // ════════════════════════════════════════════════════════════════
 let refreshTimer = null;
 
 function getRefreshInterval(){
-  const now     = new Date();
-  const totalMin = now.getHours() * 60 + now.getMinutes();
-  // 9:00 (540) to 11:59 (719) = peak window
-  return (totalMin >= 540 && totalMin <= 719) ? 5 * 60 * 1000 : 30 * 60 * 1000;
+  const m = new Date().getHours()*60 + new Date().getMinutes();
+  return (m>=540 && m<=719) ? 5*60*1000 : 30*60*1000;
 }
 
 async function silentRefresh(){
-  if(!APPS_SCRIPT_URL){ scheduleNext(); return; }
-  try{
-    const res  = await fetch(APPS_SCRIPT_URL + '?_t=' + Date.now()); // cache-bust
-    const json = await res.json();
-    if(json.employees) masterEmployees = json.employees.map(normName);
-    if(json.records && json.records.length){
-      data = json.records.map(r => ({
-        ...r, name: normName(r.name), remark: calcRemark(r.time)
-      }));
-      latestDateStr = getLatestDateStr();
-      populateDateSelect();
-      renderSummary(activeEmployee);
-      renderTable();
-    }
-  } catch(err){
-    // fail silently — employees see last known data
-    console.warn('Silent refresh failed, will retry next interval.', err);
+  const loaded = await loadFromSheet();
+  if(loaded){
+    populateDateSelect();
+    renderSummary(activeEmployee);
+    renderTable();
   }
-  scheduleNext();
-}
-
-function scheduleNext(){
-  if(refreshTimer) clearTimeout(refreshTimer);
   refreshTimer = setTimeout(silentRefresh, getRefreshInterval());
 }
 
-scheduleNext();
+// kick off
+init().then(()=>{
+  refreshTimer = setTimeout(silentRefresh, getRefreshInterval());
+});
 </script>
 </body>
 </html>
