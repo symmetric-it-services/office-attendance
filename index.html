@@ -1,738 +1,1731 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Employee Attendance Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --navy:       #0a2540;
-    --blue:       #1a6bcc;
-    --blue-mid:   #2d9cdb;
-    --teal:       #00b8a9;
-    --green:      #00c48c;
-    --green-light:#e6faf5;
-    --white:      #ffffff;
-    --gray-50:    #f7fafc;
-    --gray-100:   #edf2f7;
-    --gray-200:   #e2e8f0;
-    --gray-400:   #94a3b8;
-    --gray-600:   #475569;
-    --late-bg:    #fff0f0;
-    --late-text:  #e53e3e;
-    --ontime-bg:  #f0fff8;
-    --ontime-text:#00c48c;
-    --shadow-sm:  0 1px 3px rgba(10,37,64,0.08);
-    --shadow-md:  0 4px 16px rgba(10,37,64,0.12);
-    --shadow-lg:  0 8px 32px rgba(10,37,64,0.16);
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family:'Sora',sans-serif;
-    background:linear-gradient(135deg,#e8f4fd 0%,#f0faf7 50%,#e8f4fd 100%);
-    min-height:100vh; color:var(--navy);
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Attendance Tracker</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
 
-  /* ── HEADER ── */
-  header {
-    background:linear-gradient(135deg,var(--navy) 0%,#0e3460 60%,#0a4d6e 100%);
-    position:sticky; top:0; z-index:100; box-shadow:var(--shadow-lg);
-  }
-  .header-inner {
-    max-width:1300px; margin:0 auto; padding:15px 32px;
-    display:flex; align-items:center; justify-content:space-between;
-  }
-  .logo-area { display:flex; align-items:center; gap:14px; }
-  .logo-icon {
-    width:44px; height:44px;
-    background:linear-gradient(135deg,var(--teal),var(--green));
-    border-radius:12px; display:flex; align-items:center; justify-content:center;
-    font-size:22px; box-shadow:0 4px 12px rgba(0,196,140,0.4);
-  }
-  .logo-text h1 { font-size:1.2rem; font-weight:700; color:#fff; letter-spacing:-.3px; }
-  .logo-text p  { font-size:.68rem; color:rgba(255,255,255,.5); letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; }
-  .header-stats { display:flex; gap:24px; }
-  .hstat { text-align:center; }
-  .hstat-num   { font-size:1.4rem; font-weight:700; color:var(--teal); font-family:'JetBrains Mono',monospace; line-height:1; }
-  .hstat-label { font-size:.63rem; color:rgba(255,255,255,.45); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+  <!-- Leaflet map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Leaflet map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-  /* ── MAIN ── */
-  main { max-width:1300px; margin:0 auto; padding:26px 24px 60px; }
+  <style>
+    :root {
+      --navy: #0a2540;
+      --blue: #1a6bcc;
+      --blue-mid: #2d9cdb;
+      --teal: #00b8a9;
+      --green: #00c48c;
+      --green-light: #e6faf5;
+      --white: #ffffff;
+      --gray-50: #f7fafc;
+      --gray-100: #edf2f7;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --late-bg: #fff0f0;
+      --late-text: #e53e3e;
+      --ontime-bg: #f0fff8;
+      --ontime-text: #00c48c;
+      --shadow-sm: 0 1px 3px rgba(10, 37, 64, 0.08);
+      --shadow-md: 0 4px 16px rgba(10, 37, 64, 0.12);
+      --shadow-lg: 0 8px 32px rgba(10, 37, 64, 0.16);
+    }
 
-  /* sample banner */
-  .sample-banner {
-    background:linear-gradient(135deg,rgba(0,184,169,.08),rgba(26,107,204,.08));
-    border:1.5px solid rgba(0,184,169,.25);
-    border-radius:12px; padding:11px 18px; margin-bottom:22px;
-    display:flex; align-items:center; gap:12px; font-size:.79rem; color:var(--navy);
-  }
-  .sample-banner .bi { font-size:1.1rem; }
-  .sample-banner strong { color:var(--blue); }
-  .sample-banner code {
-    background:rgba(26,107,204,.1); border-radius:4px;
-    padding:1px 5px; font-size:.76rem; color:var(--blue);
-  }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  .section-title {
-    font-size:.68rem; font-weight:600; letter-spacing:2px;
-    text-transform:uppercase; color:var(--blue-mid);
-    margin-bottom:14px; display:flex; align-items:center; gap:8px;
-  }
-  .section-title::after {
-    content:''; flex:1; height:1px;
-    background:linear-gradient(to right,var(--blue-mid),transparent); opacity:.3;
-  }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: linear-gradient(135deg, #e8f4fd 0%, #f0faf7 50%, #e8f4fd 100%);
+      min-height: 100vh;
+      color: var(--navy);
+    }
 
-  /* ── SUMMARY GRID ── */
-  .summary-grid {
-    display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr));
-    gap:12px; margin-bottom:30px;
-  }
-  .absent-divider {
-    grid-column:1/-1; display:flex; align-items:center; gap:10px;
-    margin:10px 0 4px; font-size:.67rem; font-weight:600;
-    letter-spacing:1.5px; text-transform:uppercase; color:var(--gray-400);
-  }
-  .absent-divider::before,.absent-divider::after {
-    content:''; flex:1; height:1px; background:var(--gray-200);
-  }
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, var(--navy) 0%, #0e3460 60%, #0a4d6e 100%);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-lg);
+    }
 
-  .emp-card {
-    background:var(--white); border-radius:16px; padding:17px 15px;
-    box-shadow:var(--shadow-sm); border:1.5px solid var(--gray-100);
-    cursor:pointer; transition:all .22s ease;
-    position:relative; overflow:hidden;
-    animation:fadeUp .35s ease both;
-  }
-  .emp-card::before {
-    content:''; position:absolute; top:0; left:0; right:0; height:3px;
-    background:linear-gradient(to right,var(--teal),var(--green));
-    opacity:0; transition:opacity .22s;
-  }
-  .emp-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
-  .emp-card:hover::before { opacity:1; }
-  .emp-card.active { border-color:var(--teal); box-shadow:0 0 0 3px rgba(0,184,169,.15),var(--shadow-md); }
-  .emp-card.active::before { opacity:1; }
-  .emp-card.has-late { border-color:#fca5a5; }
-  .emp-card.has-late::before { background:linear-gradient(to right,#f87171,#ef4444); opacity:1; }
-  .emp-card.absent  { background:var(--gray-50); border-color:var(--gray-200); opacity:.8; cursor:default; }
-  .emp-card.absent::before { background:linear-gradient(to right,#94a3b8,#cbd5e1); opacity:1; }
+    .header-inner {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 15px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  /* Leave — yellow */
-  .emp-card.on-leave { background:#fffdf0; border-color:#fcd34d; cursor:default; }
-  .emp-card.on-leave::before { background:linear-gradient(to right,#f59e0b,#fcd34d); opacity:1; }
-  .emp-card.on-leave .emp-avatar { background:linear-gradient(135deg,#f59e0b,#fcd34d); }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-  /* Field Visit — blue */
-  .emp-card.field-visit { background:#eff6ff; border-color:#93c5fd; cursor:default; }
-  .emp-card.field-visit::before { background:linear-gradient(to right,#3b82f6,#93c5fd); opacity:1; }
-  .emp-card.field-visit .emp-avatar { background:linear-gradient(135deg,#1d4ed8,#3b82f6); }
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--teal), var(--green));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(0, 196, 140, 0.4);
+    }
 
-  .emp-avatar {
-    width:38px; height:38px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size:.84rem; font-weight:700; color:#fff; margin-bottom:10px;
-    background:linear-gradient(135deg,var(--blue),var(--teal));
-  }
-  .emp-card.has-late .emp-avatar { background:linear-gradient(135deg,#f87171,#ef4444); }
-  .emp-card.absent   .emp-avatar { background:linear-gradient(135deg,#94a3b8,#cbd5e1); }
+    .logo-text h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -.3px;
+    }
 
-  /* ── Leave card — Amber/Yellow ── */
-  .emp-card.on-leave { background:#fffbeb; border-color:#fcd34d; }
-  .emp-card.on-leave::before { background:linear-gradient(to right,#f59e0b,#fcd34d); opacity:1; }
-  .emp-card.on-leave .emp-avatar { background:linear-gradient(135deg,#f59e0b,#fbbf24); }
+    .logo-text p {
+      font-size: .68rem;
+      color: rgba(255, 255, 255, .5);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
 
-  /* ── Field Visit card — Sky Blue ── */
-  .emp-card.field-visit { background:#eff6ff; border-color:#93c5fd; }
-  .emp-card.field-visit::before { background:linear-gradient(to right,#3b82f6,#93c5fd); opacity:1; }
-  .emp-card.field-visit .emp-avatar { background:linear-gradient(135deg,#3b82f6,#60a5fa); }
+    .header-stats {
+      display: flex;
+      gap: 12px;
+    }
 
-  .emp-name   { font-size:.87rem; font-weight:600; color:var(--navy); margin-bottom:6px; }
-  .emp-badge  {
-    display:inline-flex; align-items:center; gap:4px;
-    font-size:.71rem; font-weight:500; padding:3px 10px; border-radius:20px;
-  }
-  .emp-badge.ontime      { background:var(--ontime-bg); color:var(--ontime-text); }
-  .emp-badge.late        { background:var(--late-bg);   color:var(--late-text);   }
-  .emp-badge.absent      { background:var(--gray-100);  color:var(--gray-400);    }
-  .emp-badge.on-leave    { background:#fef3c7;          color:#b45309;            }
-  .emp-badge.field-visit { background:#dbeafe;          color:#1d4ed8;            }
-  .emp-badge.leave       { background:#fef3c7;          color:#b45309;            }
-  .emp-badge.field       { background:#dbeafe;          color:#1d4ed8;            }
-  .emp-sub { font-size:.67rem; color:var(--gray-400); margin-top:7px; }
+    .hstat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(253, 251, 247, 0.85);
+      /* 85% opacity slightly transparent cream */
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
+      padding: 10px 16px;
+      min-width: 86px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      backdrop-filter: blur(8px);
+    }
 
-  /* ── FILTER BAR ── */
-  .filter-bar {
-    background:var(--white); border-radius:16px; padding:14px 20px;
-    display:flex; flex-wrap:wrap; gap:9px; align-items:center;
-    margin-bottom:20px; box-shadow:var(--shadow-sm); border:1px solid var(--gray-100);
-  }
-  .filter-label { font-size:.7rem; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:1px; }
-  .filter-btn {
-    padding:6px 14px; border-radius:30px; border:1.5px solid var(--gray-200);
-    background:var(--gray-50); color:var(--gray-600);
-    font-family:'Sora',sans-serif; font-size:.77rem; font-weight:500;
-    cursor:pointer; transition:all .18s;
-  }
-  .filter-btn:hover { border-color:var(--teal); color:var(--teal); background:var(--green-light); }
-  .filter-btn.active {
-    background:linear-gradient(135deg,var(--blue),var(--teal));
-    color:#fff; border-color:transparent; box-shadow:0 3px 10px rgba(26,107,204,.3);
-  }
-  .sep { width:1px; height:20px; background:var(--gray-200); margin:0 2px; }
-  .date-wrap { position:relative; display:flex; align-items:center; }
-  .date-wrap select {
-    padding:6px 28px 6px 12px; border-radius:30px;
-    border:1.5px solid var(--gray-200); background:var(--gray-50); color:var(--gray-600);
-    font-family:'Sora',sans-serif; font-size:.77rem; font-weight:500;
-    cursor:pointer; outline:none; transition:all .18s; appearance:none;
-  }
-  .date-wrap select:focus,.date-wrap select.has-val
-    { border-color:var(--teal); color:var(--navy); background:var(--white); }
-  .date-wrap::after { content:'▾'; position:absolute; right:10px; color:var(--gray-400); pointer-events:none; font-size:.73rem; }
-  .search-wrap { margin-left:auto; position:relative; }
-  .search-input {
-    padding:7px 14px 7px 33px; border:1.5px solid var(--gray-200); border-radius:30px;
-    font-family:'Sora',sans-serif; font-size:.79rem; color:var(--navy);
-    width:195px; outline:none; transition:all .18s; background:var(--gray-50);
-  }
-  .search-input:focus { border-color:var(--teal); background:#fff; box-shadow:0 0 0 3px rgba(0,184,169,.12); }
-  .search-icon { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--gray-400); font-size:.83rem; pointer-events:none; }
+    .hstat:last-child {
+      background: transparent;
+      border: none;
+      min-width: unset;
+      padding: 8px;
+      box-shadow: none;
+    }
 
-  /* ── TABLE ── */
-  .table-card { background:#fff; border-radius:20px; box-shadow:var(--shadow-md); overflow:hidden; border:1px solid var(--gray-100); }
-  .table-header {
-    background:linear-gradient(135deg,var(--navy),#0e3460);
-    padding:15px 24px; display:flex; align-items:center; justify-content:space-between;
-  }
-  .table-header h2 { font-size:.93rem; font-weight:600; color:#fff; display:flex; align-items:center; gap:10px; }
-  .table-header h2 span { background:rgba(255,255,255,.12); border-radius:20px; padding:2px 10px; font-size:.7rem; color:rgba(255,255,255,.65); }
-  .showing-lbl { font-size:.7rem; color:rgba(255,255,255,.4); }
-  .table-wrap { overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; }
-  thead tr { background:var(--gray-50); border-bottom:2px solid var(--gray-100); }
-  th { padding:11px 18px; text-align:left; font-size:.69rem; font-weight:600; text-transform:uppercase; letter-spacing:1.2px; color:var(--gray-400); cursor:pointer; user-select:none; white-space:nowrap; transition:color .15s; }
-  th:hover { color:var(--blue); }
-  tbody tr { border-bottom:1px solid var(--gray-100); transition:background .15s; }
-  tbody tr:last-child { border-bottom:none; }
-  tbody tr:hover { background:var(--gray-50); }
-  tbody tr.late-row { background:#fff9f9; }
-  tbody tr.late-row:hover { background:#fff0f0; }
-  td { padding:12px 18px; font-size:.83rem; color:var(--navy); }
-  .td-date { font-family:'JetBrains Mono',monospace; font-size:.77rem; color:var(--gray-600); }
-  .td-time { font-family:'JetBrains Mono',monospace; font-weight:500; }
-  .td-time.late   { color:var(--late-text); }
-  .td-time.ontime { color:var(--ontime-text); }
-  .badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:30px; font-size:.72rem; font-weight:600; }
-  .badge.late   { background:var(--late-bg);   color:var(--late-text);   }
-  .badge.ontime { background:var(--ontime-bg); color:var(--ontime-text); }
-  .badge-src { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.67rem; background:rgba(26,107,204,.08); color:var(--blue); font-weight:500; }
-  .name-cell { display:flex; align-items:center; gap:9px; }
-  .mini-av { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.61rem; font-weight:700; color:#fff; flex-shrink:0; background:linear-gradient(135deg,var(--blue),var(--teal)); }
-  .empty-state { text-align:center; padding:54px 24px; color:var(--gray-400); }
-  .empty-state .icon { font-size:2.6rem; margin-bottom:12px; }
-  .empty-state p { font-size:.86rem; }
+    .hstat:last-child .hstat-num {
+      font-size: 0.9rem !important;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
 
-  .footer-note { text-align:center; margin-top:26px; }
-  .cutoff-pill {
-    display:inline-flex; align-items:center; gap:8px;
-    background:linear-gradient(135deg,rgba(229,62,62,0.1),rgba(229,62,62,0.06));
-    border:1.5px solid rgba(229,62,62,0.3);
-    border-radius:30px; padding:8px 20px;
-    font-size:.82rem; font-weight:600; color:#c53030;
-    letter-spacing:.2px;
-  }
-  .cutoff-pill .dot {
-    width:8px; height:8px; border-radius:50%;
-    background:#e53e3e;
-    box-shadow:0 0 6px rgba(229,62,62,0.6);
-    flex-shrink:0;
-  }
+    .hstat:last-child .hstat-label {
+      color: rgba(255, 255, 255, 0.6);
+    }
 
-  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    .hstat-num {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--teal);
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+    }
 
-  @media(max-width:640px){
-    .header-stats{display:none}
-    .header-inner{padding:12px 16px}
-    main{padding:16px 12px 48px}
-    .summary-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}
-    .search-input{width:135px}
-  }
-</style>
+    .hstat-label {
+      font-size: .62rem;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    .header-date-select {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: rgba(255, 255, 255, 0.95);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      outline: none;
+      width: 100%;
+      color-scheme: dark;
+    }
+
+    .header-date-select option {
+      color: var(--navy);
+      background: #fff;
+      font-weight: 500;
+    }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 26px 24px 60px;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 37, 64, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #fff;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 460px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: scaleIn 0.3s ease;
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--navy), #0e3460);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+    }
+
+    .modal-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .detail-row {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      font-size: 0.9rem;
+      color: var(--navy);
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    .detail-link a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #eff6ff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .detail-link a:hover {
+      background: #dbeafe;
+    }
+
+    .view-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .view-btn:hover {
+      opacity: 0.85;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .section-title {
+      font-size: .68rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--blue-mid);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--blue-mid), transparent);
+      opacity: .3;
+    }
+
+    /* ── SUMMARY GRID ── */
+    .summary-section {
+      margin-bottom: 24px;
+    }
+
+    .summary-heading {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 12px;
+      padding-left: 4px;
+      border-left: 3px solid var(--teal);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+      gap: 12px;
+    }
+
+    .absent-divider {
+      grid-column: 1/-1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0 4px;
+      font-size: .67rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gray-400);
+    }
+
+    .absent-divider::before,
+    .absent-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+    }
+
+    .emp-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 17px 15px;
+      box-shadow: var(--shadow-sm);
+      border: 1.5px solid var(--gray-100);
+      cursor: pointer;
+      transition: all .22s ease;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp .35s ease both;
+    }
+
+    .emp-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(to right, var(--teal), var(--green));
+      opacity: 0;
+      transition: opacity .22s;
+    }
+
+    .emp-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .emp-card:hover::before {
+      opacity: 1;
+    }
+
+    .emp-card.active {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(0, 184, 169, .15), var(--shadow-md);
+    }
+
+    .emp-card.active::before {
+      opacity: 1;
+    }
+
+    .emp-card.has-late {
+      border-color: #fca5a5;
+    }
+
+    .emp-card.has-late::before {
+      background: linear-gradient(to right, #f87171, #ef4444);
+      opacity: 1;
+    }
+
+    .emp-card.absent {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      cursor: default;
+    }
+
+    .emp-card.absent::before {
+      background: linear-gradient(to right, #ef4444, #dc2626);
+      opacity: 1;
+    }
+
+    .late-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #fef2f2;
+      color: #ef4444;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid #fca5a5;
+      animation: fadeUp 0.4s ease;
+      z-index: 2;
+    }
+
+    /* Leave — yellow */
+    .emp-card.on-leave {
+      background: #fffdf0;
+      border-color: #fcd34d;
+      cursor: default;
+    }
+
+    .emp-card.on-leave::before {
+      background: linear-gradient(to right, #f59e0b, #fcd34d);
+      opacity: 1;
+    }
+
+    .emp-card.on-leave .emp-avatar {
+      background: linear-gradient(135deg, #f59e0b, #fcd34d);
+    }
+
+    /* Field Visit — blue */
+    .emp-card.field-visit {
+      background: #eff6ff;
+      border-color: #93c5fd;
+      cursor: default;
+    }
+
+    .emp-card.field-visit::before {
+      background: linear-gradient(to right, #3b82f6, #93c5fd);
+      opacity: 1;
+    }
+
+    .emp-card.field-visit .emp-avatar {
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    }
+
+    .emp-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .84rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+    }
+
+    .emp-card.has-late .emp-avatar {
+      background: linear-gradient(135deg, #f87171, #ef4444);
+    }
+
+    .emp-card.absent .emp-avatar {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+    }
+
+    /* ── Leave card — Amber/Yellow ── */
+    .emp-card.on-leave {
+      background: #fffbeb;
+      border-color: #fcd34d;
+    }
+
+    .emp-card.on-leave::before {
+      background: linear-gradient(to right, #f59e0b, #fcd34d);
+      opacity: 1;
+    }
+
+    .emp-card.on-leave .emp-avatar {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    }
+
+    /* ── Field Visit card — Sky Blue ── */
+    .emp-card.field-visit {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+
+    .emp-card.field-visit::before {
+      background: linear-gradient(to right, #3b82f6, #93c5fd);
+      opacity: 1;
+    }
+
+    .emp-card.field-visit .emp-avatar {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    }
+
+    .emp-name {
+      font-size: .87rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .emp-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: .71rem;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .emp-badge.ontime {
+      background: var(--ontime-bg);
+      color: var(--ontime-text);
+    }
+
+    .emp-badge.late {
+      background: var(--late-bg);
+      color: var(--late-text);
+    }
+
+    .emp-badge.absent {
+      background: #fef2f2;
+      color: #ef4444;
+    }
+
+    .emp-badge.on-leave {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .emp-badge.field-visit {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .emp-badge.sales-field {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .emp-badge.office-field {
+      background: #f3e8ff;
+      color: #7e22ce;
+    }
+
+    .emp-badge.leave {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .field-info-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(26, 107, 204, 0.1);
+      color: var(--blue);
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 2;
+    }
+
+    .field-info-btn:hover {
+      background: var(--blue);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .field-info-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(26, 107, 204, 0.1);
+      color: var(--blue);
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 2;
+    }
+
+    .field-info-btn:hover {
+      background: var(--blue);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .emp-badge.field {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .emp-sub {
+      font-size: .67rem;
+      color: var(--gray-400);
+      margin-top: 7px;
+    }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
+    }
+
+    .filter-label {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 30px;
+      border: 1.5px solid var(--gray-200);
+      background: var(--gray-50);
+      color: var(--gray-600);
+      font-family: 'Sora', sans-serif;
+      font-size: .77rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .18s;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+      background: var(--green-light);
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 3px 10px rgba(26, 107, 204, .3);
+    }
+
+    .sep {
+      width: 1px;
+      height: 20px;
+      background: var(--gray-200);
+      margin: 0 2px;
+    }
+
+    .date-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .date-wrap select {
+      padding: 6px 28px 6px 12px;
+      border-radius: 30px;
+      border: 1.5px solid var(--gray-200);
+      background: var(--gray-50);
+      color: var(--gray-600);
+      font-family: 'Sora', sans-serif;
+      font-size: .77rem;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: all .18s;
+      appearance: none;
+    }
+
+    .date-wrap select:focus,
+    .date-wrap select.has-val {
+      border-color: var(--teal);
+      color: var(--navy);
+      background: var(--white);
+    }
+
+    .date-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 10px;
+      color: var(--gray-400);
+      pointer-events: none;
+      font-size: .73rem;
+    }
+
+    .search-wrap {
+      margin-left: auto;
+      position: relative;
+    }
+
+    .search-input {
+      padding: 7px 14px 7px 33px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 30px;
+      font-family: 'Sora', sans-serif;
+      font-size: .79rem;
+      color: var(--navy);
+      width: 195px;
+      outline: none;
+      transition: all .18s;
+      background: var(--gray-50);
+    }
+
+    .search-input:focus {
+      border-color: var(--teal);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(0, 184, 169, .12);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      font-size: .83rem;
+      pointer-events: none;
+    }
+
+    /* ── TABLE ── */
+    .table-card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      border: 1px solid var(--gray-100);
+    }
+
+    .table-header {
+      background: linear-gradient(135deg, var(--navy), #0e3460);
+      padding: 15px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-header h2 {
+      font-size: .93rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .table-header h2 span {
+      background: rgba(255, 255, 255, .12);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: .7rem;
+      color: rgba(255, 255, 255, .65);
+    }
+
+    .showing-lbl {
+      font-size: .7rem;
+      color: rgba(255, 255, 255, .4);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      background: var(--gray-50);
+      border-bottom: 2px solid var(--gray-100);
+    }
+
+    th {
+      padding: 11px 18px;
+      text-align: left;
+      font-size: .69rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--gray-400);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: color .15s;
+    }
+
+    th:hover {
+      color: var(--blue);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--gray-100);
+      transition: background .15s;
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--gray-50);
+    }
+
+    tbody tr.late-row {
+      background: #fff9f9;
+    }
+
+    tbody tr.late-row:hover {
+      background: #fff0f0;
+    }
+
+    td {
+      padding: 12px 18px;
+      font-size: .83rem;
+      color: var(--navy);
+    }
+
+    .td-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .77rem;
+      color: var(--gray-600);
+    }
+
+    .td-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+
+    .td-time.late {
+      color: var(--late-text);
+    }
+
+    .td-time.ontime {
+      color: var(--ontime-text);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 11px;
+      border-radius: 30px;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+
+    .badge.late {
+      background: var(--late-bg);
+      color: var(--late-text);
+    }
+
+    .badge.ontime {
+      background: var(--ontime-bg);
+      color: var(--ontime-text);
+    }
+
+    .badge-src {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: .67rem;
+      font-weight: 600;
+    }
+
+    /* Team specific badge colors */
+    .badge-src.office {
+      background: rgba(26, 107, 204, .1);
+      color: var(--blue);
+    }
+
+    .badge-src.sales {
+      background: rgba(245, 158, 11, .15);
+      color: #d97706;
+    }
+
+    .badge-src.service {
+      background: rgba(0, 184, 169, .15);
+      color: var(--teal);
+    }
+
+    .name-cell {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .mini-av {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .61rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 54px 24px;
+      color: var(--gray-400);
+    }
+
+    .empty-state .icon {
+      font-size: 2.6rem;
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      font-size: .86rem;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 26px;
+    }
+
+    .cutoff-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(229, 62, 62, 0.1), rgba(229, 62, 62, 0.06));
+      border: 1.5px solid rgba(229, 62, 62, 0.3);
+      border-radius: 30px;
+      padding: 8px 20px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: #c53030;
+      letter-spacing: .2px;
+    }
+
+    .cutoff-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e53e3e;
+      box-shadow: 0 0 6px rgba(229, 62, 62, 0.6);
+      flex-shrink: 0;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(14px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @media(max-width:640px) {
+      .header-stats {
+        display: none
+      }
+
+      .header-inner {
+        padding: 12px 16px
+      }
+
+      main {
+        padding: 16px 12px 48px
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(auto-fill, minmax(145px, 1fr))
+      }
+
+      .search-input {
+        width: 135px
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="logo-area">
-      <div class="logo-icon">📋</div>
-      <div class="logo-text">
-        <h1>Attendance Tracker</h1>
-        <p>Employee Punch-in Monitor</p>
+  <header>
+    <div class="header-inner">
+      <div class="logo-area">
+        <div class="logo-icon">📋</div>
+        <div class="logo-text">
+          <h1>Attendance Tracker</h1>
+          <p>Employee Punch-in Monitor</p>
+        </div>
+      </div>
+      <div class="header-stats" id="headerStats"></div>
+    </div>
+  </header>
+
+  <main>
+
+
+
+    <div class="section-title" id="summaryTitle">Employee Summary</div>
+    <div id="summaryContainer"></div>
+
+    <div class="filter-bar">
+      <span class="filter-label">🔽 Filter</span>
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">All Records</button>
+      <button class="filter-btn" data-filter="late" onclick="setFilter('late',this)">🔴 Late Only</button>
+      <button class="filter-btn" data-filter="ontime" onclick="setFilter('ontime',this)">✅ On Time</button>
+      <div class="sep"></div>
+      <div class="search-wrap" style="display: flex; gap: 8px;">
+        <div style="position: relative;">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search employee…"
+            oninput="renderTable()">
+        </div>
+        <button class="filter-btn" onclick="downloadCSV()" title="Download Visible Data">⬇️ Export</button>
       </div>
     </div>
-    <div class="header-stats" id="headerStats"></div>
-  </div>
-</header>
 
-<main>
-
-  <div class="sample-banner">
-    <span class="bi">💡</span>
-    <div>
-      <strong>Sample Data Preview</strong> — Showing how the dashboard looks with real data (3 dates, 9 employees, 2 absent today).
-      Set <code>APPS_SCRIPT_URL</code> in the script to connect your Google Sheet.
+    <div class="table-card">
+      <div class="table-header">
+        <h2>📅 Attendance Log <span id="recordCount">0</span></h2>
+        <span class="showing-lbl" id="showingLbl"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('date')">Date ⇅</th>
+              <th onclick="sortBy('time')">Punch-In ⇅</th>
+              <th onclick="sortBy('name')">Employee ⇅</th>
+              <th onclick="sortBy('team')">Team ⇅</th>
+              <th onclick="sortBy('remark')">Status ⇅</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div id="emptyState" class="empty-state" style="display:none">
+          <div class="icon">🔍</div>
+          <p>No records match your filter.</p>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="section-title" id="summaryTitle">Employee Summary</div>
-  <div class="summary-grid" id="summaryGrid"></div>
+    <div class="footer-note">
+      <span class="cutoff-pill">
+        <span class="dot"></span>
+        Late mark cutoff: strictly after 10:05 AM (Office Only)
+      </span>
+    </div>
 
-  <div class="filter-bar">
-    <span class="filter-label">🔽 Filter</span>
-    <button class="filter-btn active" data-filter="all"    onclick="setFilter('all',this)">All Records</button>
-    <button class="filter-btn"        data-filter="late"   onclick="setFilter('late',this)">🔴 Late Only</button>
-    <button class="filter-btn"        data-filter="ontime" onclick="setFilter('ontime',this)">✅ On Time</button>
-    <div class="sep"></div>
-    <div class="date-wrap">
-      <select id="dateSelect" onchange="onDateChange(this)">
-        <option value="">📅 All Dates</option>
-      </select>
-    </div>
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="searchInput" placeholder="Search employee…" oninput="renderTable()">
-    </div>
-  </div>
+  </main>
 
-  <div class="table-card">
-    <div class="table-header">
-      <h2>📅 Punch-In Log <span id="recordCount">0</span></h2>
-      <span class="showing-lbl" id="showingLbl"></span>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th onclick="sortBy('date')">Date ⇅</th>
-            <th onclick="sortBy('time')">Punch-In ⇅</th>
-            <th onclick="sortBy('name')">Employee ⇅</th>
-            <th onclick="sortBy('remark')">Status ⇅</th>
-            <th>Source</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-      <div id="emptyState" class="empty-state" style="display:none">
-        <div class="icon">🔍</div>
-        <p>No records match your filter.</p>
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Punch-In Details</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- populated dynamically -->
       </div>
     </div>
   </div>
 
-  <div class="footer-note">
-    <span class="cutoff-pill">
-      <span class="dot"></span>
-      Late mark cutoff: strictly after 10:05 AM
-    </span>
-  </div>
+  <script>
+    // ════════════════════════════════════════════════════════════════
+    //  CONFIG — paste your deployed Apps Script Web App URL here
+    // ════════════════════════════════════════════════════════════════
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzieFCgKhM8jRI0QvrkFGRp4G8N7GHNhwNfZayAhy2XjFQOV5E6vJDm-vfOx5r1ktYc/exec";   // ← paste here
+    const LATE_CUTOFF_MIN = 10 * 60 + 5; // strictly > 10:05 = Late
 
-</main>
+    // ════════════════════════════════════════════════════════════════
+    //  LIVE DATA INITIALIZATION
+    // ════════════════════════════════════════════════════════════════
+    let masterEmployees = [];
+    let statusData = [];
+    let rawData = [];
 
-</main>
+    // ════════════════════════════════════════════════════════════════
+    //  HELPERS
+    // ════════════════════════════════════════════════════════════════
+    function normName(n) { return n.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase()); }
+    function calcRemark(time) {
+      const [h, m] = time.split(':').map(Number);
+      return (h * 60 + m) > LATE_CUTOFF_MIN ? 'Late' : 'On time';
+    }
+    function parseDateStr(d) {
+      const [dd, mm, yyyy] = d.split('/');
+      return new Date(`${yyyy}-${mm}-${dd}`);
+    }
+    function timeToMin(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+    function ini(name) { return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2); }
 
-<script>
-// ════════════════════════════════════════════════════════════════
-//  CONFIG — paste your deployed Apps Script Web App URL here
-// ════════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvtte1qX5zIJ33x8MbD7zfA8k48CG1ft1MPiSYuhmFrO0wlBOmcywZ5gyrpe51RMeM/exec";   // ← paste here
-const LATE_CUTOFF_MIN = 10 * 60 + 5; // strictly > 10:05 = Late
-
-// ════════════════════════════════════════════════════════════════
-//  MASTER EMPLOYEE LIST  (from "Employee Master" sheet)
-// ════════════════════════════════════════════════════════════════
-let masterEmployees = [
-  "Vihang","Sumit","Vishal","Kaveri",
-  "Sanjay","Prajakta","Pratiksha","Sunil","Devendra"
-];
-
-// ════════════════════════════════════════════════════════════════
-//  SAMPLE STATUS DATA  (from "Status" sheet)
-//  Columns: Date | Name | Status (Leave / Field Visit)
-// ════════════════════════════════════════════════════════════════
-let statusData = [
-  { date:"05/03/2026", name:"Sanjay",   status:"Leave"       },
-  { date:"05/03/2026", name:"Devendra", status:"Field Visit"  },
-];
-
-// ════════════════════════════════════════════════════════════════
-//  SAMPLE DATA  (from "Attendance" sheet)
-// ════════════════════════════════════════════════════════════════
-const rawData = [
-  { date:"02/03/2026", time:"9:40:00",  name:"Vihang",    source:"Machine" },
-  { date:"02/03/2026", time:"9:40:00",  name:"Sumit",     source:"Machine" },
-  { date:"02/03/2026", time:"9:43:00",  name:"Vishal",    source:"Machine" },
-  { date:"02/03/2026", time:"9:56:00",  name:"Kaveri",    source:"Machine" },
-  { date:"02/03/2026", time:"10:00:00", name:"Sanjay",    source:"Machine" },
-  { date:"02/03/2026", time:"10:01:00", name:"Prajakta",  source:"Machine" },
-  { date:"02/03/2026", time:"10:01:00", name:"Pratiksha", source:"Machine" },
-  { date:"02/03/2026", time:"10:01:00", name:"Sunil",     source:"Machine" },
-  { date:"02/03/2026", time:"11:32:00", name:"Devendra",  source:"Machine" },
-  { date:"04/03/2026", time:"9:17:00",  name:"Sumit",     source:"Machine" },
-  { date:"04/03/2026", time:"9:35:00",  name:"Vihang",    source:"Machine" },
-  { date:"04/03/2026", time:"9:38:00",  name:"Vishal",    source:"Machine" },
-  { date:"04/03/2026", time:"9:42:00",  name:"Sunil",     source:"Machine" },
-  { date:"04/03/2026", time:"9:56:00",  name:"Prajakta",  source:"Machine" },
-  { date:"04/03/2026", time:"9:57:00",  name:"Pratiksha", source:"Machine" },
-  { date:"04/03/2026", time:"10:00:00", name:"Kaveri",    source:"Machine" },
-  { date:"04/03/2026", time:"10:01:00", name:"Devendra",  source:"Machine" },
-  { date:"04/03/2026", time:"10:07:00", name:"Sanjay",    source:"Manual"  },
-  { date:"05/03/2026", time:"9:22:00",  name:"Sumit",     source:"Machine" },
-  { date:"05/03/2026", time:"9:38:00",  name:"Vihang",    source:"Machine" },
-  { date:"05/03/2026", time:"9:41:00",  name:"Vishal",    source:"Machine" },
-  { date:"05/03/2026", time:"9:44:00",  name:"Sunil",     source:"Machine" },
-  { date:"05/03/2026", time:"10:01:00", name:"Prajakta",  source:"Machine" },
-  { date:"05/03/2026", time:"10:06:00", name:"Pratiksha", source:"Machine" },
-  { date:"05/03/2026", time:"10:10:00", name:"Kaveri",    source:"Machine" },
-];
-
-// ════════════════════════════════════════════════════════════════
-//  HELPERS
-// ════════════════════════════════════════════════════════════════
-function normName(n){ return n.trim().toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()); }
-function calcRemark(time){
-  const [h,m] = time.split(':').map(Number);
-  return (h*60+m) > LATE_CUTOFF_MIN ? 'Late' : 'On time';
-}
-function parseDateStr(d){
-  const [dd,mm,yyyy] = d.split('/');
-  return new Date(`${yyyy}-${mm}-${dd}`);
-}
-function timeToMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
-function ini(name){ return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
-
-const AVATAR_COLORS = [
-  'linear-gradient(135deg,#1a6bcc,#00b8a9)',
-  'linear-gradient(135deg,#0e3460,#2d9cdb)',
-  'linear-gradient(135deg,#00b8a9,#00c48c)',
-  'linear-gradient(135deg,#2d9cdb,#00c48c)',
-  'linear-gradient(135deg,#1a6bcc,#00c48c)',
-];
-function avColor(i){ return AVATAR_COLORS[i%AVATAR_COLORS.length]; }
-
-// ════════════════════════════════════════════════════════════════
-//  STATUS DATA  (from "Status" sheet — Leave / Field Visit)
-// ════════════════════════════════════════════════════════════════
-// Each entry: { name, date, status }  — date in DD/MM/YYYY format
-let statusData = [
-  // sample entries — replaced by live sheet data when connected
-  { name:"Sanjay",   date:"05/03/2026", status:"Leave"       },
-  { name:"Devendra", date:"05/03/2026", status:"Field Visit"  },
-];
-
-// helper: get status for an employee on the latest date
-function getStatusForToday(name){
-  const entry = statusData.find(s =>
-    s.name.toLowerCase() === name.toLowerCase() && s.date === latestDateStr
-  );
-  return entry ? entry.status : null;
-}
+    const AVATAR_COLORS = [
+      'linear-gradient(135deg,#1a6bcc,#00b8a9)',
+      'linear-gradient(135deg,#0e3460,#2d9cdb)',
+      'linear-gradient(135deg,#00b8a9,#00c48c)',
+      'linear-gradient(135deg,#2d9cdb,#00c48c)',
+      'linear-gradient(135deg,#1a6bcc,#00c48c)',
+    ];
+    function avColor(i) { return AVATAR_COLORS[i % AVATAR_COLORS.length]; }
 
 
-let data = rawData.map(r=>({...r, name:normName(r.name), remark:calcRemark(r.time)}));
 
-function getLatestDateStr(){
-  return data.reduce((max,r)=>parseDateStr(r.date)>parseDateStr(max)?r.date:max, data[0].date);
-}
-let latestDateStr = getLatestDateStr();
+    // helper: get status for an employee on the latest date
+    function getStatusForToday(name) {
+      const entry = statusData.find(s =>
+        s.name.toLowerCase() === name.toLowerCase() && s.date === latestDateStr
+      );
+      return entry ? entry.status : null;
+    }
 
-// ════════════════════════════════════════════════════════════════
-//  SUMMARY (latest date only)
-// ════════════════════════════════════════════════════════════════
-function buildSummary(){
-  const map = {};
-  data.filter(r=>r.date===latestDateStr).forEach(r=>{
-    if(!map[r.name]) map[r.name]={late:0,firstPunch:'—'};
-    if(r.remark==='Late') map[r.name].late++;
-    if(map[r.name].firstPunch==='—'||timeToMin(r.time)<timeToMin(map[r.name].firstPunch))
-      map[r.name].firstPunch=r.time.slice(0,5);
-  });
-  return map;
-}
 
-function renderSummary(activeEmp){
-  const summary     = buildSummary();
-  const grid        = document.getElementById('summaryGrid');
-  grid.innerHTML    = '';
-  const presentNames= Object.keys(summary);
+    let data = [];
+    let latestDateStr = "";
 
-  // categorise non-present employees
-  const leaveNames      = [];
-  const fieldVisitNames = [];
-  const absentNames     = [];
+    // ════════════════════════════════════════════════════════════════
+    //  SUMMARY (latest date only)
+    // ════════════════════════════════════════════════════════════════
+    function buildSummary() {
+      const map = {};
+      data.filter(r => r.date === latestDateStr).forEach(r => {
+        if (!map[r.name]) map[r.name] = { late: 0, firstPunch: '—' };
+        if (r.remark === 'Late') map[r.name].late++;
+        if (map[r.name].firstPunch === '—' || timeToMin(r.time) < timeToMin(map[r.name].firstPunch))
+          map[r.name].firstPunch = r.time.slice(0, 5);
+      });
+      return map;
+    }
 
-  masterEmployees.map(normName).forEach(n => {
-    if(presentNames.some(p => p.toLowerCase()===n.toLowerCase())) return;
-    const st = getStatusForToday(n);
-    if(st==='Leave')            leaveNames.push(n);
-    else if(st==='Field Visit') fieldVisitNames.push(n);
-    else                        absentNames.push(n);
-  });
+    function renderSummary(activeEmp) {
+      const summary = buildSummary();
+      const container = document.getElementById('summaryContainer');
+      container.innerHTML = '';
+      const presentNames = Object.keys(summary);
 
-  const totalPresent    = presentNames.length;
-  const totalLate       = Object.values(summary).filter(s=>s.late>0).length;
-  const totalOnTime     = totalPresent - totalLate;
-  const totalLeave      = leaveNames.length;
-  const totalField      = fieldVisitNames.length;
-  const totalAbsent     = absentNames.length;
+      // calculate lifetime lates for all employees
+      const lifetimeLates = {};
+      data.forEach(r => {
+        if (r.remark === 'Late') {
+          lifetimeLates[r.name] = (lifetimeLates[r.name] || 0) + 1;
+        }
+      });
 
-  const [dd,mm,yyyy]= latestDateStr.split('/');
-  const dateLabel   = new Date(`${yyyy}-${mm}-${dd}`)
-    .toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+      // categorise active employees by team
+      const officePresent = [];
+      const fieldPresent = [];
 
-  document.getElementById('headerStats').innerHTML=`
+      presentNames.forEach(name => {
+        // find their latest record to determine their team
+        const latestRec = data.find(r => r.name === name && r.date === latestDateStr);
+        if (latestRec) {
+          if (latestRec.team === 'Sales' || latestRec.team === 'Service' || latestRec.source === 'Field') {
+            fieldPresent.push(name);
+          } else {
+            officePresent.push(name);
+          }
+        } else {
+          officePresent.push(name); // fallback
+        }
+      });
+
+      // categorise non-present employees
+      const leaveNames = [];
+      const absentNames = [];
+
+      masterEmployees.map(normName).forEach(n => {
+        if (presentNames.some(p => p.toLowerCase() === n.toLowerCase())) return;
+        const st = getStatusForToday(n);
+        if (st === 'Leave') leaveNames.push(n);
+        else absentNames.push(n);
+      });
+
+      const totalPresent = presentNames.length;
+      const totalLate = Object.values(summary).filter(s => s.late > 0).length;
+      const totalOnTime = totalPresent - totalLate;
+      const totalLeave = leaveNames.length;
+      const totalAbsent = absentNames.length;
+
+      const [dd, mm, yyyy] = latestDateStr.split('/');
+      const dateLabel = new Date(`${yyyy}-${mm}-${dd}`)
+        .toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      // Build options for global date filter
+      const dates = [...new Set(data.map(r => r.date))].sort((a, b) => parseDateStr(b) - parseDateStr(a));
+      const dateOptionsHtml = dates.map(d => {
+        const [d_dd, d_mm, d_yyyy] = d.split('/');
+        const lbl = new Date(`${d_yyyy}-${d_mm}-${d_dd}`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        return `<option value="${d}" ${d === latestDateStr ? 'selected' : ''}>${lbl}</option>`;
+      }).join('');
+
+      document.getElementById('headerStats').innerHTML = `
     <div class="hstat"><div class="hstat-num">${totalPresent}</div><div class="hstat-label">Present</div></div>
-    <div class="hstat"><div class="hstat-num" style="color:#94a3b8">${totalAbsent}</div><div class="hstat-label">Absent</div></div>
+    <div class="hstat"><div class="hstat-num" style="color:#ef4444">${totalAbsent}</div><div class="hstat-label">Absent</div></div>
     <div class="hstat"><div class="hstat-num" style="color:#f59e0b">${totalLeave}</div><div class="hstat-label">On Leave</div></div>
-    <div class="hstat"><div class="hstat-num" style="color:#3b82f6">${totalField}</div><div class="hstat-label">Field Visit</div></div>
     <div class="hstat"><div class="hstat-num" style="color:#f87171">${totalLate}</div><div class="hstat-label">Late</div></div>
-    <div class="hstat"><div class="hstat-num" style="font-size:.8rem;color:var(--teal)">${dateLabel}</div><div class="hstat-label">Last Updated</div></div>
+    <div class="hstat" style="min-width: 140px;">
+      <select id="globalDateSelect" class="header-date-select" onchange="window.changeGlobalDate(this.value)">
+        ${dateOptionsHtml}
+      </select>
+      <div class="hstat-label">Filter by Date</div>
+    </div>
   `;
-  document.getElementById('summaryTitle').textContent=`Employee Summary — ${dateLabel}`;
+      document.getElementById('summaryTitle').textContent = `Employee Summary — ${dateLabel}`;
 
-  // ── Present cards ──
-  presentNames.forEach((name,i)=>{
-    const stat=summary[name], hasLate=stat.late>0, isActive=activeEmp===name;
-    const card=document.createElement('div');
-    card.className=`emp-card ${hasLate?'has-late':''} ${isActive?'active':''}`;
-    card.style.animationDelay=`${i*.04}s`;
-    card.innerHTML=`
-      <div class="emp-avatar" style="${hasLate?'':'background:'+avColor(i)}">${ini(name)}</div>
-      <div class="emp-name">${name}</div>
-      <span class="emp-badge ${hasLate?'late':'ontime'}">${hasLate?'⚠ Late':'✓ On Time'}</span>
-      <div class="emp-sub">🕐 ${stat.firstPunch}</div>`;
-    card.onclick=()=>{
-      activeEmployee=(activeEmployee===name)?null:name;
-      currentFilter='all';
-      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      // Helper to generate a section
+      const createSection = (title, itemsHtml) => {
+        if (!itemsHtml) return '';
+        return `
+          <div class="summary-section">
+            <div class="summary-heading">${title}</div>
+            <div class="summary-grid">
+              ${itemsHtml}
+            </div>
+          </div>
+        `;
+      };
+
+      // ── Office Attendance ──
+      let officeHtml = '';
+      officePresent.forEach((name, i) => {
+        const stat = summary[name], hasLate = stat.late > 0, isActive = activeEmp === name;
+        const displayFirstPunch = stat.firstPunch.replace(/:$/, '');
+        const totalLates = lifetimeLates[name] || 0;
+        const lateBadgeHtml = totalLates > 0 ? `<div class="late-badge">${totalLates} Late</div>` : '';
+
+        officeHtml += `
+        <div class="emp-card ${hasLate ? 'has-late' : ''} ${isActive ? 'active' : ''}" style="animation-delay:${i * .04}s" onclick="filterByEmp('${name}')">
+          ${lateBadgeHtml}
+          <div class="emp-avatar" style="${hasLate ? '' : 'background:' + avColor(i)}">${ini(name)}</div>
+          <div class="emp-name">${name}</div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+            <span class="emp-badge ${hasLate ? 'late' : 'ontime'}">${hasLate ? '⚠ Late' : '✓ On Time'}</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">🕐 ${displayFirstPunch}</span>
+          </div>
+        </div>`;
+      });
+
+      // ── Field Attendance ──
+      let fieldHtml = '';
+      fieldPresent.forEach((name, i) => {
+        const stat = summary[name], isActive = activeEmp === name;
+        const rec = data.find(r => r.name === name && r.date === latestDateStr);
+
+        let subText = 'Working on field';
+        let badgeText = 'On Field';
+        let badgeClass = 'field-visit';
+        let punchTimeHtml = '';
+
+        let infoBtnHtml = '';
+
+        if (rec) {
+          const punchTime = rec.time.slice(0, 5); // Extract "HH:MM"
+          punchTimeHtml = `<span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">🕐 ${punchTime}</span>`;
+
+          const safeData = JSON.stringify(rec).replace(/"/g, '&quot;');
+          // Stop propagation so clicking the button doesn't select the card
+          infoBtnHtml = `<button class="field-info-btn" onclick="event.stopPropagation(); openDetails('${safeData}')" title="View Details">
+                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                         </button>`;
+
+          if (rec.team === 'Service') {
+            badgeText = `Service`;
+            badgeClass = 'field-visit'; // Blue
+            subText = `${rec.siteName || 'Unknown Site'}, ${rec.numLabour || 0} Labours`;
+          } else if (rec.team === 'Sales') {
+            badgeText = `Sales`;
+            badgeClass = 'sales-field'; // Amber
+            subText = rec.location ? rec.location : 'Working on field';
+          } else {
+            badgeText = `Office Visit`;
+            badgeClass = 'office-field'; // Purple
+            subText = rec.location ? rec.location : 'Working on field';
+          }
+        }
+
+        fieldHtml += `
+        <div class="emp-card field-visit ${isActive ? 'active' : ''}" style="animation-delay:${i * .04}s" onclick="filterByEmp('${name}')" style="position: relative;">
+          ${infoBtnHtml}
+          <div class="emp-avatar">${ini(name)}</div>
+          <div class="emp-name">${name}</div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+            <span class="emp-badge ${badgeClass}">${badgeText}</span>
+            ${punchTimeHtml}
+          </div>
+          <div class="emp-sub" style="color: #000; font-weight: 600;">${subText}</div>
+        </div>`;
+      });
+
+      // ── Absent & Leave ──
+      let absentLeaveHtml = '';
+
+      leaveNames.forEach((name, i) => {
+        const isActive = activeEmp === name;
+        absentLeaveHtml += `
+        <div class="emp-card on-leave ${isActive ? 'active' : ''}" style="animation-delay:${i * .04}s" onclick="filterByEmp('${name}')">
+          <div class="emp-avatar">${ini(name)}</div>
+          <div class="emp-name">${name}</div>
+          <span class="emp-badge leave">On Leave</span>
+          <div class="emp-sub">Approved Leave</div>
+        </div>`;
+      });
+
+      absentNames.forEach((name, i) => {
+        const isActive = activeEmp === name;
+        const totalLates = lifetimeLates[name] || 0;
+        const lateBadgeHtml = totalLates > 0 ? `<div class="late-badge">${totalLates} Late</div>` : '';
+
+        absentLeaveHtml += `
+        <div class="emp-card absent ${isActive ? 'active' : ''}" style="animation-delay:${i * .04}s" onclick="filterByEmp('${name}')">
+          ${lateBadgeHtml}
+          <div class="emp-avatar">${ini(name)}</div>
+          <div class="emp-name">${name}</div>
+          <span class="emp-badge absent">✕ Absent</span>
+          <div class="emp-sub">No punch-in recorded</div>
+        </div>`;
+      });
+
+      if (officeHtml) container.innerHTML += createSection('Office Attendance', officeHtml);
+      if (fieldHtml) container.innerHTML += createSection('Field Attendance', fieldHtml);
+      if (absentLeaveHtml) container.innerHTML += createSection('Absent & Leave', absentLeaveHtml);
+    }
+
+    // Global function to attach to dynamically inserted HTML strings
+    window.filterByEmp = function (name) {
+      activeEmployee = (activeEmployee === name) ? null : name;
+      currentFilter = 'all';
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       document.querySelector('[data-filter="all"]').classList.add('active');
-      document.getElementById('dateSelect').value='';
       renderSummary(activeEmployee);
       renderTable();
     };
-    grid.appendChild(card);
-  });
 
-  // ── On Leave cards ──
-  if(leaveNames.length){
-    appendDivider(grid, `🟡 On Leave (${leaveNames.length})`);
-    leaveNames.forEach((name,i)=>{
-      grid.appendChild(makeStatusCard(name,'on-leave','leave','🌴 On Leave', presentNames.length+i));
-    });
-  }
-
-  // ── Field Visit cards ──
-  if(fieldVisitNames.length){
-    appendDivider(grid, `🔵 Field Visit (${fieldVisitNames.length})`);
-    fieldVisitNames.forEach((name,i)=>{
-      grid.appendChild(makeStatusCard(name,'field-visit','field','🚗 Field Visit', presentNames.length+leaveNames.length+i));
-    });
-  }
-
-  // ── Absent cards ──
-  if(absentNames.length){
-    appendDivider(grid, `Absent (${absentNames.length})`);
-    absentNames.forEach((name,i)=>{
-      grid.appendChild(makeStatusCard(name,'absent','absent','✕ Absent', presentNames.length+leaveNames.length+fieldVisitNames.length+i));
-    });
-  }
-}
-
-function appendDivider(grid, text){
-  const div=document.createElement('div');
-  div.className='absent-divider';
-  div.textContent=text;
-  grid.appendChild(div);
-}
-
-function makeStatusCard(name, cardClass, badgeClass, label, i){
-  const card=document.createElement('div');
-  card.className=`emp-card ${cardClass}`;
-  card.style.animationDelay=`${i*.04}s`;
-  const sub = cardClass==='on-leave' ? 'Approved leave'
-            : cardClass==='field-visit' ? 'Out on field visit'
-            : 'No punch-in recorded';
-  card.innerHTML=`
-    <div class="emp-avatar">${ini(name)}</div>
-    <div class="emp-name">${name}</div>
-    <span class="emp-badge ${badgeClass}">${label}</span>
-    <div class="emp-sub">${sub}</div>`;
-  return card;
-}
-
-// ════════════════════════════════════════════════════════════════
-//  STATE & FILTERS
-// ════════════════════════════════════════════════════════════════
-let currentFilter='all', activeEmployee=null, sortKey='date', sortAsc=true;
-
-function setFilter(f,btn){
-  currentFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const sel=document.getElementById('dateSelect');
-  sel.value=''; sel.classList.remove('has-val');
-  if(f==='all'){ activeEmployee=null; renderSummary(null); }
-  renderTable();
-}
-
-function onDateChange(sel){
-  currentFilter=sel.value||'all';
-  activeEmployee=null;
-  renderSummary(null);
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  if(!sel.value) document.querySelector('[data-filter="all"]').classList.add('active');
-  sel.classList.toggle('has-val',!!sel.value);
-  renderTable();
-}
-
-function sortBy(key){
-  if(sortKey===key) sortAsc=!sortAsc; else{sortKey=key;sortAsc=true;}
-  renderTable();
-}
-
-function populateDateSelect(){
-  const dates=[...new Set(data.map(r=>r.date))].sort((a,b)=>parseDateStr(a)-parseDateStr(b));
-  const sel=document.getElementById('dateSelect');
-  sel.innerHTML='<option value="">📅 All Dates</option>';
-  dates.forEach(d=>{
-    const [dd,mm,yyyy]=d.split('/');
-    const lbl=new Date(`${yyyy}-${mm}-${dd}`).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-    const opt=document.createElement('option');
-    opt.value=d; opt.textContent=lbl; sel.appendChild(opt);
-  });
-}
-
-// ════════════════════════════════════════════════════════════════
-//  RENDER TABLE
-// ════════════════════════════════════════════════════════════════
-function renderTable(){
-  const search=document.getElementById('searchInput').value.toLowerCase().trim();
-  let filtered=[...data];
-  if(activeEmployee)              filtered=filtered.filter(r=>r.name===activeEmployee);
-  if(currentFilter==='late')      filtered=filtered.filter(r=>r.remark==='Late');
-  else if(currentFilter==='ontime') filtered=filtered.filter(r=>r.remark==='On time');
-  else if(currentFilter.includes('/')) filtered=filtered.filter(r=>r.date===currentFilter);
-  if(search) filtered=filtered.filter(r=>r.name.toLowerCase().includes(search));
-  filtered.sort((a,b)=>{
-    let va,vb;
-    if(sortKey==='time'){va=timeToMin(a.time);vb=timeToMin(b.time);}
-    else{va=(a[sortKey]||'').toLowerCase();vb=(b[sortKey]||'').toLowerCase();}
-    return sortAsc?(va<vb?-1:va>vb?1:0):(va>vb?-1:va<vb?1:0);
-  });
-  const body=document.getElementById('tableBody');
-  const empty=document.getElementById('emptyState');
-  document.getElementById('recordCount').textContent=filtered.length;
-  document.getElementById('showingLbl').textContent=`Showing ${filtered.length} of ${data.length} records`;
-  if(!filtered.length){body.innerHTML='';empty.style.display='block';return;}
-  empty.style.display='none';
-  body.innerHTML=filtered.map(r=>{
-    const late=r.remark==='Late';
-    return `<tr class="${late?'late-row':''}">
-      <td class="td-date">${r.date}</td>
-      <td class="td-time ${late?'late':'ontime'}">${r.time.slice(0,5)}</td>
-      <td><div class="name-cell"><div class="mini-av">${ini(r.name)}</div>${r.name}</div></td>
-      <td><span class="badge ${late?'late':'ontime'}">${late?'⚠ Late':'✓ On Time'}</span></td>
-      <td><span class="badge-src">${r.source}</span></td>
-    </tr>`;
-  }).join('');
-}
-
-// ════════════════════════════════════════════════════════════════
-//  LOAD DATA FROM APPS SCRIPT
-// ════════════════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════════════════
-//  LOAD DATA FROM APPS SCRIPT  (JSONP to bypass CORS)
-// ════════════════════════════════════════════════════════════════
-function loadFromSheet(){
-  return new Promise((resolve) => {
-    if(!APPS_SCRIPT_URL){ resolve(false); return; }
-
-    // remove any previous script tag
-    const old = document.getElementById('__gs_script');
-    if(old) old.remove();
-
-    // unique callback name
-    const cbName = '__gsCallback_' + Date.now();
-
-    // Apps Script calls this function with the data
-    window[cbName] = function(json){
-      try{
-        if(json.employees && json.employees.length)
-          masterEmployees = json.employees.map(normName);
-        if(json.statuses)
-          statusData = json.statuses.map(s=>({...s, name:normName(s.name)}));
-        if(json.records && json.records.length){
-          data = json.records.map(r=>({...r, name:normName(r.name), remark:calcRemark(r.time)}));
-          latestDateStr = getLatestDateStr();
-          resolve(true); return;
-        }
-      } catch(e){ console.warn('Parse error:', e); }
-      resolve(false);
-      delete window[cbName];
+    window.changeGlobalDate = function (dateStr) {
+      latestDateStr = dateStr;
+      activeEmployee = null;
+      currentFilter = 'all';
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-filter="all"]').classList.add('active');
+      renderSummary(null);
+      renderTable();
     };
 
-    // inject script tag — Apps Script will wrap response in callback()
-    const s  = document.createElement('script');
-    s.id     = '__gs_script';
-    s.src    = APPS_SCRIPT_URL + '?callback=' + cbName + '&_t=' + Date.now();
-    s.onerror= ()=>{ console.warn('JSONP script load failed'); resolve(false); delete window[cbName]; };
-    document.head.appendChild(s);
+    // ════════════════════════════════════════════════════════════════
+    //  STATE & FILTERS & EXPORT
+    // ════════════════════════════════════════════════════════════════
+    let currentFilter = 'all', activeEmployee = null, sortKey = 'date', sortAsc = true;
+    let currentVisibleData = []; // Store currently filtered data for export
 
-    // timeout fallback after 8 seconds
-    setTimeout(()=>{ if(window[cbName]){ resolve(false); delete window[cbName]; } }, 8000);
-  });
-}
+    function setFilter(f, btn) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (f === 'all') { activeEmployee = null; renderSummary(null); }
+      renderTable();
+    }
 
-// ════════════════════════════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════════════════════════════
-async function init(){
-  const loaded = await loadFromSheet();
-  if(loaded){
-    const banner=document.querySelector('.sample-banner');
-    if(banner) banner.style.display='none';
-  }
-  populateDateSelect();
-  renderSummary(null);
-  renderTable();
-}
+    function sortBy(key) {
+      if (sortKey === key) sortAsc = !sortAsc; else { sortKey = key; sortAsc = true; }
+      renderTable();
+    }
 
-// ════════════════════════════════════════════════════════════════
-//  SILENT AUTO-REFRESH
-//  9:00–11:59 AM → every 5 min | otherwise → every 30 min
-// ════════════════════════════════════════════════════════════════
-let refreshTimer = null;
+    function downloadCSV() {
+      if (!currentVisibleData || currentVisibleData.length === 0) {
+        alert("No data available to download.");
+        return;
+      }
 
-function getRefreshInterval(){
-  const m = new Date().getHours()*60 + new Date().getMinutes();
-  return (m>=540 && m<=719) ? 5*60*1000 : 30*60*1000;
-}
+      // Headers requested: Date | Punch in | Employee | Team | Status
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Date,Punch in,Employee,Team,Status\n";
 
-async function silentRefresh(){
-  const loaded = await loadFromSheet();
-  if(loaded){
-    populateDateSelect();
-    renderSummary(activeEmployee);
-    renderTable();
-  }
-  refreshTimer = setTimeout(silentRefresh, getRefreshInterval());
-}
+      currentVisibleData.forEach(r => {
+        const displayTime = r.time.slice(0, 5).replace(/:$/, '');
+        const team = r.team || r.source || 'Office';
+        const status = r.remark === 'Late' ? 'Late' : 'On Time';
 
-// kick off
-init().then(()=>{
-  refreshTimer = setTimeout(silentRefresh, getRefreshInterval());
-});
-</script>
+        // Wrap names in quotes in case they contain commas
+        const row = [
+          r.date,
+          displayTime,
+          `"${r.name}"`,
+          team,
+          status
+        ];
+
+        csvContent += row.join(",") + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+
+      // Name file dynamically based on filter/date
+      const dateLabel = latestDateStr.replace(/\//g, '-');
+      const empLabel = activeEmployee ? `_${activeEmployee.replace(/\s+/g, '-')}` : '';
+      link.setAttribute("download", `Attendance_${dateLabel}${empLabel}.csv`);
+
+      document.body.appendChild(link); // Required for FF
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  RENDER TABLE
+    // ════════════════════════════════════════════════════════════════
+    function renderTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      let filtered = data;
+
+      if (activeEmployee) {
+        // If an employee is clicked, show their entire history across all dates
+        filtered = filtered.filter(r => r.name === activeEmployee);
+      } else {
+        // Otherwise, only show records for the currently selected date
+        filtered = filtered.filter(r => r.date === latestDateStr);
+      }
+
+      if (currentFilter === 'late') filtered = filtered.filter(r => r.remark === 'Late');
+      else if (currentFilter === 'ontime') filtered = filtered.filter(r => r.remark === 'On time');
+
+      if (search) filtered = filtered.filter(r => r.name.toLowerCase().includes(search));
+      filtered.sort((a, b) => {
+        let va, vb;
+        if (sortKey === 'time') { va = timeToMin(a.time); vb = timeToMin(b.time); }
+        else { va = (a[sortKey] || '').toLowerCase(); vb = (b[sortKey] || '').toLowerCase(); }
+        return sortAsc ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
+      });
+      const body = document.getElementById('tableBody');
+      const empty = document.getElementById('emptyState');
+
+      currentVisibleData = filtered; // Update global array for CSV export
+
+      document.getElementById('recordCount').textContent = filtered.length;
+      document.getElementById('showingLbl').textContent = `Showing ${filtered.length} of ${data.length} records`;
+      if (!filtered.length) { body.innerHTML = ''; empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      body.innerHTML = filtered.map((r, rowIdx) => {
+        const late = r.remark === 'Late';
+        const displayTime = r.time.slice(0, 5).replace(/:$/, '');
+
+        // Define team styling
+        const tColor = r.team ? r.team.toLowerCase() : 'office';
+
+        let detailsBtn = '-';
+        if (r.team === 'Sales' || r.team === 'Service') {
+          // store stringified data in attribute
+          const safeData = JSON.stringify(r).replace(/"/g, '&quot;');
+          detailsBtn = `<button class="view-btn" onclick="openDetails('${safeData}')">View Info</button>`;
+        }
+
+        return `<tr class="${late ? 'late-row' : ''}">
+      <td class="td-date">${r.date}</td>
+      <td class="td-time ${late ? 'late' : 'ontime'}">${displayTime}</td>
+      <td><div class="name-cell"><div class="mini-av" style="background:${avColor(r.name.length)}">${ini(r.name)}</div>${r.name}</div></td>
+      <td><span class="badge-src ${tColor}">${r.team || r.source}</span></td>
+      <td><span class="badge ${late ? 'late' : 'ontime'}">${late ? '⚠ Late' : '✓ On Time'}</span></td>
+      <td>${detailsBtn}</td>
+    </tr>`;
+      }).join('');
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  MODAL LOGIC
+    // ════════════════════════════════════════════════════════════════
+    function openDetails(dataStr) {
+      try {
+        const r = JSON.parse(dataStr);
+        const mb = document.getElementById('modalBody');
+
+        let html = '';
+
+        if (r.team === 'Service') {
+          html += `
+            <div class="detail-row">
+              <div class="detail-label">Site Name</div>
+              <div class="detail-value">${r.siteName || '—'}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Number of Labour</div>
+              <div class="detail-value">${r.numLabour || '—'}</div>
+            </div>
+          `;
+        }
+
+        html += `
+          <div class="detail-row">
+            <div class="detail-label">Check-In Location</div>
+            <div class="detail-value">${r.location || '—'}</div>
+          </div>
+          <div class="detail-row" style="flex-direction: column; align-items: flex-start;">
+            <div class="detail-label" style="margin-bottom: 10px;">Check-In Location Map</div>
+            ${(r.lat && r.lng) ? `
+              <div id="mapContainer" style="width: 100%; height: 210px; border-radius: 8px; margin-bottom: 12px; background: #e2e8f0; border: 1px solid #cbd5e1; z-index: 1;"></div>
+              <div class="detail-value detail-link">
+                <a href="https://maps.google.com/?q=${r.lat},${r.lng}" target="_blank">🗺️ View on Maps</a>
+              </div>
+            ` : '<div class="detail-value">—</div>'}
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Selfie Photo</div>
+            <div class="detail-value detail-link">
+              ${r.selfieUrl ? `<a href="${r.selfieUrl}" target="_blank">📷 View Selfie</a>` : '—'}
+            </div>
+          </div>
+        `;
+
+        if (r.team === 'Service') {
+          html += `
+            <div class="detail-row">
+              <div class="detail-label">Labours Photo</div>
+              <div class="detail-value detail-link">
+                ${r.labourPhotoUrl ? `<a href="${r.labourPhotoUrl}" target="_blank">👥 View Labours</a>` : '—'}
+              </div>
+            </div>
+          `;
+        }
+
+        mb.innerHTML = html;
+        document.getElementById('detailModal').classList.add('active');
+
+        // Cleanup previous map instance if exists
+        if (window.detailMap) {
+          window.detailMap.remove();
+          window.detailMap = null;
+        }
+
+        // Initialize Leaflet map if coords exist
+        if (r.lat && r.lng) {
+          // slight delay ensures the modal animation finishes and container has dimensions
+          setTimeout(() => {
+            const mapEl = document.getElementById('mapContainer');
+            if (mapEl) {
+              window.detailMap = L.map('mapContainer').setView([r.lat, r.lng], 14);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap',
+                maxZoom: 19
+              }).addTo(window.detailMap);
+
+              L.marker([r.lat, r.lng]).addTo(window.detailMap)
+                .bindPopup(`<b>${r.name}</b><br>${r.time.slice(0, 5)}`)
+                .openPopup();
+            }
+          }, 300);
+        }
+
+      } catch (e) { console.error('Error parsing details data', e); }
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('active');
+      if (window.detailMap) {
+        window.detailMap.remove();
+        window.detailMap = null;
+      }
+    }
+
+    // Close on overlay click
+    document.getElementById('detailModal').addEventListener('click', function (e) {
+      if (e.target === this) closeModal();
+    });
+
+
+    // ════════════════════════════════════════════════════════════════
+    //  LOAD DATA FROM APPS SCRIPT  (JSONP to bypass CORS)
+    // ════════════════════════════════════════════════════════════════
+    function loadFromSheet() {
+      return new Promise(async (resolve) => {
+        try {
+          const res = await fetch(APPS_SCRIPT_URL);
+          const mockJson = await res.json();
+
+          if (mockJson.employees && mockJson.employees.length)
+            masterEmployees = mockJson.employees.map(normName);
+          if (mockJson.statuses)
+            statusData = mockJson.statuses.map(s => ({ ...s, name: normName(s.name) }));
+
+          if (mockJson.records && mockJson.records.length) {
+            data = mockJson.records.map(r => ({ ...r, name: normName(r.name) }));
+            latestDateStr = data.reduce((max, r) => parseDateStr(r.date) > parseDateStr(max) ? r.date : max, data[0].date);
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        } catch (e) {
+          console.error("Error loading from live sheet:", e);
+          resolve(false);
+        }
+      });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  INIT
+    // ════════════════════════════════════════════════════════════════
+    async function init() {
+      const loaded = await loadFromSheet();
+
+      if (data.length > 0) {
+        renderSummary(null);
+        renderTable();
+      } else {
+        // If no data is available (e.g. invalid URL, or empty sheet)
+        // we still need to initialize the table view with an empty state.
+        document.getElementById('tableBody').innerHTML = '';
+        document.getElementById('emptyState').style.display = 'block';
+
+        // Clear out the header statistics
+        document.getElementById('headerStats').innerHTML = `
+      <div class="hstat"><div class="hstat-num">0</div><div class="hstat-label">Present</div></div>
+      <div class="hstat"><div class="hstat-num" style="color:#f87171">0</div><div class="hstat-label">Late</div></div>
+      <div class="hstat"><div class="hstat-num" style="font-size:.8rem;color:var(--teal)">--</div><div class="hstat-label">Last Updated</div></div>
+    `;
+        document.getElementById('summaryTitle').textContent = `Employee Summary`;
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  SILENT AUTO-REFRESH
+    //  9:00–11:59 AM → every 5 min | otherwise → every 30 min
+    // ════════════════════════════════════════════════════════════════
+    let refreshTimer = null;
+
+    function getRefreshInterval() {
+      const m = new Date().getHours() * 60 + new Date().getMinutes();
+      return (m >= 540 && m <= 719) ? 5 * 60 * 1000 : 30 * 60 * 1000;
+    }
+
+    async function silentRefresh() {
+      const loaded = await loadFromSheet();
+      if (loaded) {
+        renderSummary(activeEmployee);
+        renderTable();
+      }
+      refreshTimer = setTimeout(silentRefresh, getRefreshInterval());
+    }
+
+    // kick off
+    init().then(() => {
+      refreshTimer = setTimeout(silentRefresh, getRefreshInterval());
+    });
+  </script>
 </body>
+
 </html>
